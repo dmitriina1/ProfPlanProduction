@@ -51,7 +51,15 @@ namespace ProfPlan.Models
                 }
             }
         }
+        public ObservableCollection<TableCollection> TablesCollectionWithP
+        {
+            get { return new ObservableCollection<TableCollection>(TablesCollection.Where(tc => tc.Tablename.StartsWith("П_")).ToList()); }
+        }
 
+        public ObservableCollection<TableCollection> TablesCollectionWithF
+        {
+            get { return new ObservableCollection<TableCollection>(TablesCollection.Where(tc => tc.Tablename.StartsWith("Ф_")).ToList()); }
+        }
         public TableCollection(string tablename, ObservableCollection<ExcelData> col)
         {
             Tablename = tablename;

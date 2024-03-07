@@ -244,8 +244,106 @@ namespace ProfPlan.ViewModels
 
                     // Обновление свойства привязок данных в XAML
                     OnPropertyChanged(nameof(TablesCollection));
+                    UpdateListBoxItemsSource();
                 }
             }
         }
+
+        // Все для взаимодействия ComboBox и ListBox
+
+        private int _selectedComboBoxIndex;
+
+        public int SelectedComboBoxIndex
+        {
+            get { return _selectedComboBoxIndex; }
+            set
+            {
+                if (_selectedComboBoxIndex != value)
+                {
+                    _selectedComboBoxIndex = value;
+                    OnPropertyChanged(nameof(SelectedComboBoxIndex));
+
+                    // Обновляем ItemsSource для ListBox в зависимости от выбранного элемента в ComboBox
+                    UpdateListBoxItemsSource();
+                }
+            }
+        }
+        private ObservableCollection<TableCollection> _displayedTables;
+
+        public ObservableCollection<TableCollection> DisplayedTables
+        {
+            get { return _displayedTables; }
+            set
+            {
+                if (_displayedTables != value)
+                {
+                    _displayedTables = value;
+                    OnPropertyChanged(nameof(DisplayedTables));
+                }
+            }
+        }
+        private void UpdateListBoxItemsSource()
+        {
+            if (SelectedComboBoxIndex == 0)
+            {
+                DisplayedTables = TablesCollectionWithP;
+            }
+            else if (SelectedComboBoxIndex == 1)
+            {
+                DisplayedTables = TablesCollectionWithF;
+            }
+        }
+
+        //Все для взаимодействия listbox и datagrid
+
+        private TableCollection _selectedTable;
+
+        public TableCollection SelectedTable
+        {
+            get { return _selectedTable; }
+            set
+            {
+                if (_selectedTable != value)
+                {
+                    _selectedTable = value;
+                    OnPropertyChanged(nameof(SelectedTable));
+
+                    // Обновляем данные в DataGrid при выборе нового элемента в ListBox
+                    UpdateDataGrid();
+                }
+            }
+        }
+
+        private void UpdateDataGrid()
+        {
+            // Проверяем, что SelectedTable не null и что у него есть данные ExcelData
+            if (SelectedTable != null && SelectedTable.ExcelData != null)
+            {
+                // Обновляем ItemsSource для DataGrid
+                DataGridCollection = SelectedTable.ExcelData;
+            }
+            else
+            {
+                // Если данных нет, можно очистить ItemsSource для DataGrid
+                DataGridCollection = null;
+            }
+        }
+
+        private ObservableCollection<ExcelData> _dataGridCollection;
+
+        public ObservableCollection<ExcelData> DataGridCollection
+        {
+            get { return _dataGridCollection; }
+            set
+            {
+                if (_dataGridCollection != value)
+                {
+                    _dataGridCollection = value;
+                    OnPropertyChanged(nameof(DataGridCollection));
+                }
+            }
+        }
+
+
     }
 }

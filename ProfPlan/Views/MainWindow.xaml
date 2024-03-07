@@ -11,7 +11,12 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="4*" />
+        </Grid.ColumnDefinitions>
+        
         <Menu Grid.Row="0" Margin="5,5" Background="Transparent">
 
             <MenuItem Header="Файл" HorizontalAlignment="Left" FontSize="16">
@@ -21,11 +26,21 @@
                 <MenuItem Header="Сохранить как" FontSize="14" HorizontalAlignment="Left" />
                 <MenuItem Header="Выход" FontSize="14" HorizontalAlignment="Left" />
             </MenuItem>
-            <ComboBox x:Name="comboBox">
-                <ComboBoxItem Content="План"/>
+            <ComboBox x:Name="comboBox" SelectedIndex="{Binding SelectedComboBoxIndex}">
+                <ComboBoxItem  Content="План"/>
                 <ComboBoxItem Content="Факт"/>
             </ComboBox>
         </Menu>
         
+        <ListBox Grid.Row="1" Grid.Column="0" x:Name="myListBox" SelectionMode="Single" 
+ ItemsSource="{Binding DisplayedTables}"
+                 SelectedItem="{Binding SelectedTable}"
+ DisplayMemberPath="Tablename">
+        </ListBox>
+        
+        <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="False" Width="3"
+          HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+        <DataGrid Grid.Row="1" Grid.Column="2" ItemsSource="{Binding SelectedTable.ExcelData}"/>
+
     </Grid>
 </Window>
