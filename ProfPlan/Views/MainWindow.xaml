@@ -7,6 +7,25 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0" Margin="5,5" Background="Transparent">
+
+            <MenuItem Header="Файл" HorizontalAlignment="Left" FontSize="16">
+                <MenuItem Header="Создать" FontSize="14" HorizontalAlignment="Left" />
+                <MenuItem Header="Открыть" FontSize="14" HorizontalAlignment="Left" Command="{Binding LoadDataCommand}"/>
+                <MenuItem Header="Сохранить" FontSize="14" HorizontalAlignment="Left" />
+                <MenuItem Header="Сохранить как" FontSize="14" HorizontalAlignment="Left" />
+                <MenuItem Header="Выход" FontSize="14" HorizontalAlignment="Left" />
+            </MenuItem>
+            <ComboBox x:Name="comboBox">
+                <ComboBoxItem Content="План"/>
+                <ComboBoxItem Content="Факт"/>
+            </ComboBox>
+        </Menu>
         
     </Grid>
 </Window>

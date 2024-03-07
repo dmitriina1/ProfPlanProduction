@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ProfPlan.ViewModels;
 
 namespace ProfPlan
 {
@@ -23,6 +24,8 @@ namespace ProfPlan
         public MainWindow()
         {
             InitializeComponent();
+            MainViewModel MainViewModel = new MainViewModel();
+            this.DataContext = MainViewModel;
         }
     }
 }
