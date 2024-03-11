@@ -15,6 +15,8 @@ using ExcelDataReader;
 using System.ComponentModel;
 using System.Windows.Controls;
 using ProfPlan.ViewModels.Base;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace ProfPlan.ViewModels
 {
@@ -28,228 +30,237 @@ namespace ProfPlan.ViewModels
         {
             get { return _loadDataCommand ?? (_loadDataCommand = new RelayCommand(LoadData)); }
         }
-        private void LoadData(object parameter)
+        private string GetExcelFilePath()
         {
-            //try
+            var openFileDialog = new OpenFileDialog() { Filter = "Excel Files|*.xls;*.xlsx" };
+
+            return openFileDialog.ShowDialog() == true ? openFileDialog.FileName : null;
+        }
+        private DataSet ReadExcelData(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return null;
+            directoryPath = filePath;
+            using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
             {
-                string tabname = "";
-                var openFileDialog = new OpenFileDialog() { Filter = "Excel Files|*.xls;*.xlsx" };
-                if (openFileDialog.ShowDialog() == true)
+                using (IExcelDataReader reader = ExcelReaderFactory.CreateReader(stream))
                 {
-                    directoryPath = openFileDialog.FileName;
-                    using (var stream = File.Open(openFileDialog.FileName, FileMode.Open, FileAccess.Read))
+                    return reader.AsDataSet(new ExcelDataSetConfiguration()
                     {
-                        using (IExcelDataReader reader = ExcelReaderFactory.CreateReader(stream))
-                        {
-                            DataSet result = reader.AsDataSet(new ExcelDataSetConfiguration()
-                            {
-                                ConfigureDataTable = (_) => new ExcelDataTableConfiguration() { UseHeaderRow = false }
-                            });
-                            tableCollection = result.Tables;
-                            TablesCollections.Clear();
-
-                            foreach (DataTable table in tableCollection)
-                            {
-                                Number = 1;
-                                tabname = table.TableName;
-                                ObservableCollection<ExcelData> list = new ObservableCollection<ExcelData>();
-                                int rowIndex = -1;
-                                bool haveTeacher = false;
-
-                                //Определение индекса строки с заголовком "Дисциплина"
-                                for (int i = 0; i < table.Rows.Count; i++)
-                                {
-                                    for (int j = 0; j < table.Columns.Count - 1; j++)
-                                    {
-                                        if (table.Rows[i][j].ToString().Trim() == "Дисциплина")
-                                        {
-                                            rowIndex = i;
-                                            break;
-                                        }
-                                    }
-                                }
-                                bool exitOuterLoop = false;
-                                int endstring = -1;
-                                for (int i = 0; i < table.Rows.Count; i++)
-                                {
-                                    for (int j = 0; j < table.Columns.Count - 1; j++)
-                                    {
-                                        if (table.Rows[i][j].ToString().Trim() == "Дисциплина")
-                                        {
-                                            rowIndex = i;
-
-                                            exitOuterLoop = true;
-                                            break;
-                                        }
-                                    }
-
-                                    if (exitOuterLoop)
-                                    {
-                                        // Выход из внешнего цикла
-                                        break;
-                                    }
-                                }
-                                if (rowIndex != -1)
-                                    for (int i = rowIndex; i < table.Rows.Count; i++)
-                                    {
-                                        if (table.Rows[i][0].ToString() == "")
-                                        {
-                                            endstring = i;
-                                            break;
-                                        }
-                                    }
-
-                                // Проверка наличия столбца "Преподаватель"
-                                for (int j = 0; j < table.Columns.Count - 1; j++)
-                                {
-                                    if (rowIndex != -1 && table.Rows[rowIndex][j].ToString().Trim() == "Преподаватель")
-                                    {
-                                        haveTeacher = true;
-                                        break;
-                                    }
-                                }
-                                var teachers = new ObservableCollection<string>();
-
-                                // Заполнение коллекции данных
-                                if (table.TableName.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) == -1 &&
-                                    table.TableName.IndexOf("доп", StringComparison.OrdinalIgnoreCase) == -1)
-                                {
-
-                                    if (endstring == -1) { endstring = table.Rows.Count; }
-                                    for (int i = rowIndex + 1; i < endstring; i++)
-                                    {
-                                        try
-                                        {
-                                            if (haveTeacher && !string.IsNullOrWhiteSpace(table.Rows[i][0].ToString()))
-                                            {
-                                                list.Add(new ExcelModel(
-                                                                       Number,
-                                                                       table.Rows[i][1].ToString(),
-                                                                       table.Rows[i][2].ToString(),
-                                                                       table.Rows[i][3].ToString(),
-                                                                       table.Rows[i][4].ToString(),
-                                                                       table.Rows[i][5].ToString(),
-                                                                       table.Rows[i][6].ToNullable<int>(),
-                                                                       table.Rows[i][7].ToString(),
-                                                                       table.Rows[i][8].ToString(),
-                                                                       table.Rows[i][9].ToNullable<int>(),
-                                                                       table.Rows[i][10].ToNullable<int>(),
-                                                                       table.Rows[i][11].ToNullable<int>(),
-                                                                       table.Rows[i][12].ToString(),
-                                                                       table.Rows[i][13].ToNullable<int>(),
-                                                                       table.Rows[i][14].ToNullable<double>(),
-                                                                       table.Rows[i][15].ToNullable<double>(),
-                                                                       table.Rows[i][16].ToNullable<double>(),
-                                                                       table.Rows[i][17].ToNullable<double>(),
-                                                                       table.Rows[i][18].ToNullable<double>(),
-                                                                       table.Rows[i][19].ToNullable<double>(),
-                                                                       table.Rows[i][20].ToNullable<double>(),
-                                                                       table.Rows[i][21].ToNullable<double>(),
-                                                                       table.Rows[i][22].ToNullable<double>(),
-                                                                       table.Rows[i][23].ToNullable<double>(),
-                                                                       table.Rows[i][24].ToNullable<double>(),
-                                                                       table.Rows[i][25].ToNullable<double>(),
-                                                                       table.Rows[i][26].ToNullable<double>(),
-                                                                       table.Rows[i][27].ToNullable<double>(),
-                                                                       table.Rows[i][28].ToNullable<double>()));
-                                                Number++;
-                                            }
-                                            else if (!haveTeacher)
-                                            {
-                                                list.Add(new ExcelModel(
-                                                                       Number,
-                                                                       "",
-                                                                       table.Rows[i][1].ToString(),
-                                                                       table.Rows[i][2].ToString(),
-                                                                       table.Rows[i][3].ToString(),
-                                                                       table.Rows[i][4].ToString(),
-                                                                       table.Rows[i][5].ToNullable<int>(),
-                                                                       table.Rows[i][6].ToString(),
-                                                                       table.Rows[i][7].ToString(),
-                                                                       table.Rows[i][8].ToNullable<int>(),
-                                                                       table.Rows[i][9].ToNullable<int>(),
-                                                                       table.Rows[i][10].ToNullable<int>(),
-                                                                       table.Rows[i][11].ToString(),
-                                                                       table.Rows[i][12].ToNullable<double>(),
-                                                                       table.Rows[i][13].ToNullable<double>(),
-                                                                       table.Rows[i][14].ToNullable<double>(),
-                                                                       table.Rows[i][15].ToNullable<double>(),
-                                                                       table.Rows[i][16].ToNullable<double>(),
-                                                                       table.Rows[i][17].ToNullable<double>(),
-                                                                       table.Rows[i][18].ToNullable<double>(),
-                                                                       table.Rows[i][19].ToNullable<double>(),
-                                                                       table.Rows[i][20].ToNullable<double>(),
-                                                                       table.Rows[i][21].ToNullable<double>(),
-                                                                       table.Rows[i][22].ToNullable<double>(),
-                                                                       table.Rows[i][23].ToNullable<double>(),
-                                                                       table.Rows[i][24].ToNullable<double>(),
-                                                                       table.Rows[i][25].ToNullable<double>(),
-                                                                       table.Rows[i][26].ToNullable<double>(),
-                                                                       table.Rows[i][27].ToNullable<double>()));
-                                                Number++;
-                                            }
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            MessageBox.Show($"Error adding data: {ex.Message}");
-                                        }
-                                    }
-                                }
-                                else if (table.TableName.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) != -1)
-                                {
-                                    bool hasBetPer = false;
-                                    for (int i = 1; i < table.Columns.Count; i++)
-                                    {
-                                        if (table.Rows[0][i].ToString().IndexOf("%", StringComparison.OrdinalIgnoreCase) != -1)
-                                        {
-                                            hasBetPer = true;
-                                            break;
-                                        }
-                                    }
-                                    if (hasBetPer != true)
-                                        for (int i = 1; i < table.Rows.Count; i++)
-                                        {
-                                            if (!string.IsNullOrEmpty(table.Rows[i][0].ToString()))
-                                                list.Add(new ExcelTotal(
-                                                    table.Rows[i][0].ToString(),
-                                                    table.Rows[i][1].ToNullable<int>(),
-                                                    null,
-                                                    table.Rows[i][2].ToNullable<double>(),
-                                                    table.Rows[i][3].ToNullable<double>(),
-                                                    table.Rows[i][4].ToNullable<double>(),
-                                                    Math.Round(Convert.ToDouble(table.Rows[i][5].ToNullable<double>()), 2)
-                                                    ));
-                                        }
-                                    else
-                                    {
-                                        for (int i = 1; i < table.Rows.Count; i++)
-                                        {
-                                            if (!string.IsNullOrEmpty(table.Rows[i][0].ToString()))
-                                                list.Add(new ExcelTotal(
-                                                    table.Rows[i][0].ToString(),
-                                                     table.Rows[i][1].ToNullable<int>(),
-                                                    table.Rows[i][2].ToNullable<double>(),
-                                                    table.Rows[i][3].ToNullable<double>(),
-                                                    table.Rows[i][4].ToNullable<double>(),
-                                                    table.Rows[i][5].ToNullable<double>(),
-                                                    table.Rows[i][6].ToNullable<double>()
-                                                    ));
-                                        }
-                                    }
-
-                                }
-
-                                // Добавление коллекции в TablesCollection
-                                TablesCollections.Add(new TableCollection(tabname, list));
-                            }
-                        }
-                    }
-
-                    // Обновление свойства привязок данных в XAML
-                    OnPropertyChanged(nameof(TablesCollections));
-                    UpdateListBoxItemsSource();
+                        ConfigureDataTable = (_) => new ExcelDataTableConfiguration() { UseHeaderRow = false }
+                    });
                 }
             }
+        }
+        private void ProcessDataTable(DataTable table)
+        {
+            string tabname = "";
+            Number = 1;
+            tabname = table.TableName;
+            ObservableCollection<ExcelData> list = new ObservableCollection<ExcelData>();
+            int rowIndex = -1;
+            bool haveTeacher = false;
+
+            //Определение индекса строки с заголовком "Дисциплина"
+            for (int i = 0; i < table.Rows.Count; i++)
+            {
+                for (int j = 0; j < table.Columns.Count - 1; j++)
+                {
+                    if (table.Rows[i][j].ToString().Trim() == "Дисциплина")
+                    {
+                        rowIndex = i;
+                        break;
+                    }
+                }
+            }
+            bool exitOuterLoop = false;
+            int endstring = -1;
+            for (int i = 0; i < table.Rows.Count; i++)
+            {
+                for (int j = 0; j < table.Columns.Count - 1; j++)
+                {
+                    if (table.Rows[i][j].ToString().Trim() == "Дисциплина")
+                    {
+                        rowIndex = i;
+
+                        exitOuterLoop = true;
+                        break;
+                    }
+                }
+
+                if (exitOuterLoop)
+                {
+                    break;
+                }
+            }
+            if (rowIndex != -1)
+                for (int i = rowIndex; i < table.Rows.Count; i++)
+                {
+                    if (table.Rows[i][0].ToString() == "")
+                    {
+                        endstring = i;
+                        break;
+                    }
+                }
+
+            // Проверка наличия столбца "Преподаватель"
+            for (int j = 0; j < table.Columns.Count - 1; j++)
+            {
+                if (rowIndex != -1 && table.Rows[rowIndex][j].ToString().Trim() == "Преподаватель")
+                {
+                    haveTeacher = true;
+                    break;
+                }
+            }
+            if (table.TableName.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) == -1 &&
+                                    table.TableName.IndexOf("доп", StringComparison.OrdinalIgnoreCase) == -1)
+            {
+
+                if (endstring == -1) { endstring = table.Rows.Count; }
+                for (int i = rowIndex + 1; i < endstring; i++)
+                {
+                    try
+                    {
+                        if (haveTeacher && !string.IsNullOrWhiteSpace(table.Rows[i][0].ToString()))
+                        {
+                            list.Add(new ExcelModel(
+                                                   Number,
+                                                   table.Rows[i][1].ToString(),
+                                                   table.Rows[i][2].ToString(),
+                                                   table.Rows[i][3].ToString(),
+                                                   table.Rows[i][4].ToString(),
+                                                   table.Rows[i][5].ToString(),
+                                                   table.Rows[i][6].ToNullable<int>(),
+                                                   table.Rows[i][7].ToString(),
+                                                   table.Rows[i][8].ToString(),
+                                                   table.Rows[i][9].ToNullable<int>(),
+                                                   table.Rows[i][10].ToNullable<int>(),
+                                                   table.Rows[i][11].ToNullable<int>(),
+                                                   table.Rows[i][12].ToString(),
+                                                   table.Rows[i][13].ToNullable<int>(),
+                                                   table.Rows[i][14].ToNullable<double>(),
+                                                   table.Rows[i][15].ToNullable<double>(),
+                                                   table.Rows[i][16].ToNullable<double>(),
+                                                   table.Rows[i][17].ToNullable<double>(),
+                                                   table.Rows[i][18].ToNullable<double>(),
+                                                   table.Rows[i][19].ToNullable<double>(),
+                                                   table.Rows[i][20].ToNullable<double>(),
+                                                   table.Rows[i][21].ToNullable<double>(),
+                                                   table.Rows[i][22].ToNullable<double>(),
+                                                   table.Rows[i][23].ToNullable<double>(),
+                                                   table.Rows[i][24].ToNullable<double>(),
+                                                   table.Rows[i][25].ToNullable<double>(),
+                                                   table.Rows[i][26].ToNullable<double>(),
+                                                   table.Rows[i][27].ToNullable<double>(),
+                                                   table.Rows[i][28].ToNullable<double>()));
+                            Number++;
+                        }
+                        else if (!haveTeacher)
+                        {
+                            list.Add(new ExcelModel(
+                                                   Number,
+                                                   "",
+                                                   table.Rows[i][1].ToString(),
+                                                   table.Rows[i][2].ToString(),
+                                                   table.Rows[i][3].ToString(),
+                                                   table.Rows[i][4].ToString(),
+                                                   table.Rows[i][5].ToNullable<int>(),
+                                                   table.Rows[i][6].ToString(),
+                                                   table.Rows[i][7].ToString(),
+                                                   table.Rows[i][8].ToNullable<int>(),
+                                                   table.Rows[i][9].ToNullable<int>(),
+                                                   table.Rows[i][10].ToNullable<int>(),
+                                                   table.Rows[i][11].ToString(),
+                                                   table.Rows[i][12].ToNullable<double>(),
+                                                   table.Rows[i][13].ToNullable<double>(),
+                                                   table.Rows[i][14].ToNullable<double>(),
+                                                   table.Rows[i][15].ToNullable<double>(),
+                                                   table.Rows[i][16].ToNullable<double>(),
+                                                   table.Rows[i][17].ToNullable<double>(),
+                                                   table.Rows[i][18].ToNullable<double>(),
+                                                   table.Rows[i][19].ToNullable<double>(),
+                                                   table.Rows[i][20].ToNullable<double>(),
+                                                   table.Rows[i][21].ToNullable<double>(),
+                                                   table.Rows[i][22].ToNullable<double>(),
+                                                   table.Rows[i][23].ToNullable<double>(),
+                                                   table.Rows[i][24].ToNullable<double>(),
+                                                   table.Rows[i][25].ToNullable<double>(),
+                                                   table.Rows[i][26].ToNullable<double>(),
+                                                   table.Rows[i][27].ToNullable<double>()));
+                            Number++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error adding data: {ex.Message}");
+                    }
+                }
+            }
+            else if (table.TableName.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) != -1)
+            {
+                ProcessTotalTable(table, list);
+            }
+            TablesCollections.Add(new TableCollection(tabname, list));
+
+        }
+        private void ProcessTotalTable(DataTable table, ObservableCollection<ExcelData> list)
+        {
+            bool hasBetPer = false;
+            for (int i = 1; i < table.Columns.Count; i++)
+            {
+                if (table.Rows[0][i].ToString().IndexOf("%", StringComparison.OrdinalIgnoreCase) != -1)
+                {
+                    hasBetPer = true;
+                    break;
+                }
+            }
+            if (hasBetPer != true)
+                for (int i = 1; i < table.Rows.Count; i++)
+                {
+                    if (!string.IsNullOrEmpty(table.Rows[i][0].ToString()))
+                        list.Add(new ExcelTotal(
+                            table.Rows[i][0].ToString(),
+                            table.Rows[i][1].ToNullable<int>(),
+                            null,
+                            table.Rows[i][2].ToNullable<double>(),
+                            table.Rows[i][3].ToNullable<double>(),
+                            table.Rows[i][4].ToNullable<double>(),
+                            Math.Round(Convert.ToDouble(table.Rows[i][5].ToNullable<double>()), 2)
+                            ));
+                }
+            else
+            {
+                for (int i = 1; i < table.Rows.Count; i++)
+                {
+                    if (!string.IsNullOrEmpty(table.Rows[i][0].ToString()))
+                        list.Add(new ExcelTotal(
+                            table.Rows[i][0].ToString(),
+                             table.Rows[i][1].ToNullable<int>(),
+                            table.Rows[i][2].ToNullable<double>(),
+                            table.Rows[i][3].ToNullable<double>(),
+                            table.Rows[i][4].ToNullable<double>(),
+                            table.Rows[i][5].ToNullable<double>(),
+                            table.Rows[i][6].ToNullable<double>()
+                            ));
+                }
+            }
+        }
+
+        private void LoadData(object parameter)
+        {
+            string filePath = GetExcelFilePath();
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                tableCollection = ReadExcelData(filePath).Tables;
+                TablesCollections.Clear();
+                foreach (DataTable table in tableCollection)
+                {
+                    ProcessDataTable(table);
+                }
+                OnPropertyChanged(nameof(TablesCollections));
+                UpdateListBoxItemsSource();
+            }
+
         }
 
         // Все для взаимодействия ComboBox и ListBox
@@ -311,7 +322,7 @@ namespace ProfPlan.ViewModels
                     _selectedTable = value;
                     OnPropertyChanged(nameof(SelectedTable));
                     // Обновляем данные в DataGrid при выборе нового элемента в ListBox
-                    
+
 
 
                 }
@@ -334,6 +345,161 @@ namespace ProfPlan.ViewModels
         }
         // Выбор содержимого dataGrid
 
+        //Сохранение 
+        private RelayCommand _saveDataToExcel;
+        public ICommand SaveDataCommand
+        {
+            get { return _saveDataToExcel ?? (_saveDataToExcel = new RelayCommand(SaveToExcel)); }
+        }
+        private RelayCommand _saveDataToExcelAs;
+        public ICommand SaveDataAsCommand
+        {
+            get { return _saveDataToExcelAs ?? (_saveDataToExcelAs = new RelayCommand(SaveToExcelAs)); }
+        }
+        private void SaveToExcelAs(object parameter)
+        {
+            SaveToExcelAs();
+        }
+        private void SaveToExcelAs()
+        {
+            System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+            saveFileDialog.Filter = "Excel files (*.xlsx)|*.xlsx|All files (*.*)|*.*";
+            saveFileDialog.Title = "Save Excel File";
+            saveFileDialog.FileName = $"Расчет Нагрузки {DateTime.Today:dd-MM-yyyy}.xlsx";
 
-    }   
+            System.Windows.Forms.DialogResult result = saveFileDialog.ShowDialog();
+
+            if (result == System.Windows.Forms.DialogResult.OK)
+            {
+                directoryPath = saveFileDialog.FileName;
+            }
+            else
+            {
+                return;
+            }
+            SaveToExcels(TablesCollections.GetTablesCollection());
+        }
+        private void SaveToExcel(object parameter)
+        {
+            SaveToExcels(TablesCollections.GetTablesCollection());
+        }
+
+        private void SaveToExcels(ObservableCollection<TableCollection> tablesCollection)
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                foreach (var table in tablesCollection)
+                {
+                    var worksheet = CreateWorksheet(workbook, table);
+                    PopulateWorksheet(worksheet, table);
+                }
+                int frow = 2;
+                List<string> newPropertyNames = new List<string>
+    {
+        "№","Преподаватель", "Дисциплина","Семестр(четный или нечетный)","Группа","Институт","Число групп","Подгруппа","Форма обучения","Число студентов","Из них коммерч.","Недель","Форма отчетности","Лекции",  "Практики","Лабораторные","Консультации", "Зачеты", "Экзамены", "Курсовые работы", "Курсовые проекты",  "ГЭК+ПриемГЭК, прием ГАК",
+        "Диплом","РГЗ_Реф, нормоконтроль","ПрактикаРабота, реценз диплом", "Прочее", "Всего","Бюджетные","Коммерческие"
+    };
+                List<string> newPropertyTotalNames = new List<string>
+    {
+        "ФИО","Ставка", "Ставка(%)","Всего","Осень","Весна","Разница"
+    };
+                foreach (var worksheet in workbook.Worksheets)
+                {
+                    if (worksheet.Name.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) == -1)
+                    {
+                        for (int i = 0; i < newPropertyNames.Count; i++)
+                        {
+                            worksheet.Cell(frow, i + 1).Value = newPropertyNames[i];
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < newPropertyTotalNames.Count; i++)
+                        {
+                            worksheet.Cell(frow - 1, i + 1).Value = newPropertyTotalNames[i];
+                        }
+                    }
+                }
+                SaveWorkbook(workbook);
+            }
+        }
+
+        private IXLWorksheet CreateWorksheet(XLWorkbook workbook, TableCollection table)
+        {
+            var worksheet = workbook.Worksheets.Add(table.Tablename);
+
+            if (table.Tablename.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) != -1)
+            {
+                CreateTotalHeaders(worksheet);
+            }
+            else
+            {
+                CreateModelHeaders(worksheet);
+            }
+
+            return worksheet;
+        }
+
+        private void CreateTotalHeaders(IXLWorksheet worksheet)
+        {
+            int columnNumber = 1;
+            foreach (var propertyInfo in typeof(ExcelTotal).GetProperties())
+            {
+                worksheet.Cell(1, columnNumber).Value = propertyInfo.Name;
+                columnNumber++;
+            }
+        }
+
+        private void CreateModelHeaders(IXLWorksheet worksheet)
+        {
+            int columnNumber = 1;
+            foreach (var propertyInfo in typeof(ExcelModel).GetProperties())
+            {
+                if (propertyInfo.Name != "Teachers")
+                {
+                    worksheet.Cell(2, columnNumber).Value = propertyInfo.Name;
+                    columnNumber++;
+                }
+            }
+        }
+
+        private void PopulateWorksheet(IXLWorksheet worksheet, TableCollection table)
+        {
+            int rowNumber = table.Tablename.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) != -1 ? 2 : 3;
+            int columnNumber = 1;
+
+            foreach (var data in table.ExcelData)
+            {
+                foreach (var propertyName in GetPropertyNames(data))
+                {
+                    var value = data.GetType().GetProperty(propertyName)?.GetValue(data, null);
+                    worksheet.Cell(rowNumber, columnNumber).Value = value != null ? value.ToString() : "";
+                    columnNumber++;
+                }
+
+                rowNumber++;
+                columnNumber = 1;
+            }
+           
+        }
+
+        private IEnumerable<string> GetPropertyNames(object data)
+        {
+            return data is ExcelModel model
+                ? typeof(ExcelModel).GetProperties().Where(p => p.Name != "Teachers").Select(p => p.Name)
+                : typeof(ExcelTotal).GetProperties().Select(p => p.Name);
+        }
+
+        private void SaveWorkbook(XLWorkbook workbook)
+        {
+            if (directoryPath.EndsWith(".xls", StringComparison.OrdinalIgnoreCase))
+            {
+                SaveToExcelAs();
+            }
+            else
+            {
+                workbook.SaveAs(directoryPath);
+            }
+        }
+    }
 }
