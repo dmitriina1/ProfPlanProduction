@@ -2,12 +2,24 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:ProfPlan"
+              xmlns:views="clr-namespace:ProfPlan.Views"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Windows.xaml"/>
+                
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml" />
+                <!--<ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Dark.xaml" />-->
             </ResourceDictionary.MergedDictionaries>
+            <views:MyContentTemplateSelector x:Key="MyContentTemplateSelector"
+                   FirstTemplate="{StaticResource FirstTemplate}" 
+                   SecondTemplate="{StaticResource SecondTemplate}"/>
+            <views:TabStripPlacementConverter x:Key="TabStripPlacementConverter"
+       TopBottomTemplate="{StaticResource TopBottomTemplate}" 
+            LeftTemplate="{StaticResource LeftTemplate}" 
+            RightTemplate ="{StaticResource RightTemplate}"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

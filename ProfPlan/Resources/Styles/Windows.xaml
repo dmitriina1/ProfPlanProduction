@@ -1,4 +1,137 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:wpf="clr-namespace:MaterialDesignThemes.Wpf;assembly=MaterialDesignThemes.Wpf">
     
+
+    <DataTemplate x:Key="FirstTemplate" >
+        <DataGrid ItemsSource="{Binding ExcelData}" AutoGenerateColumns="False" VirtualizingPanel.IsVirtualizing="True" CanUserAddRows="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="№" Binding="{Binding Number}" IsReadOnly="True"/>
+                <DataGridTemplateColumn Header="Преподаватель">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox IsEditable="True" 
+Text="{Binding Teacher, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+ItemsSource="{Binding Teachers}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Дисциплина" Binding="{Binding Discipline, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Семестр" Binding="{Binding Term, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Группа" Binding="{Binding Group, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Институт" Binding="{Binding Institute, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Число групп" Binding="{Binding GroupCount, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Подгруппа" Binding="{Binding SubGroup, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Форма обучения" Binding="{Binding FormOfStudy, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Число студентов" Binding="{Binding StudentsCount, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Из них комерч." Binding="{Binding CommercicalStudentsCount, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Недель" Binding="{Binding Weeks, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Форма отчетности" Binding="{Binding ReportingForm, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Лекции" Binding="{Binding Lectures, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Практики" Binding="{Binding Practices, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Лабораторные" Binding="{Binding Laboratory, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Консультации" Binding="{Binding Consultations, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Зачеты" Binding="{Binding Tests, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Экзамены" Binding="{Binding Exams, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Курсовые работы" Binding="{Binding CourseWorks, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Курсовые проекты" Binding="{Binding CourseProjects, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="ГЭК+Прием ГЭК, прием ГАК" Binding="{Binding GEKAndGAK, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Диплом" Binding="{Binding Diploma, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="РГЗ_Реф, нормоконтроль" Binding="{Binding RGZ, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="ПрактикаРабота, реценз диплом" Binding="{Binding ReviewDiploma, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Прочее" Binding="{Binding Other, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Всего" Binding="{Binding Total, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Бюджетные" Binding="{Binding Budget, TargetNullValue=''}"/>
+                <DataGridTextColumn Header="Коммерческие" Binding="{Binding Commercial, TargetNullValue=''}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DataTemplate>
+
+    <DataTemplate  x:Key="SecondTemplate" >
+        <DataGrid ItemsSource="{Binding ExcelData}" AutoGenerateColumns="False" VirtualizingPanel.IsVirtualizing="True" CanUserAddRows="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ФИО" Binding="{Binding Teacher, TargetNullValue=''}" />
+                <DataGridTextColumn Header="Ставка" Binding="{Binding Bet, TargetNullValue=''}" />
+                <DataGridTextColumn Header="Ставка (%)" Binding="{Binding BetPercent, TargetNullValue=''}" />
+                <DataGridTextColumn Header="Всего" Binding="{Binding TotalHours, TargetNullValue=''}" />
+                <DataGridTextColumn Header="Осень" Binding="{Binding AutumnHours, TargetNullValue=''}" />
+                <DataGridTextColumn Header="Весна" Binding="{Binding SpringHours, TargetNullValue=''}" />
+                <DataGridTextColumn Header="Разница" Binding="{Binding Difference, TargetNullValue=''}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="HeaderTemplate">
+        <TextBlock Text="{Binding Tablename}" MinWidth="50" />
+    </DataTemplate>
+
+    <Style TargetType="TabItem">
+        <Setter Property="HeaderTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Tablename}"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <ControlTemplate TargetType="TabControl" x:Key="TopBottomTemplate">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <TabPanel x:Name="HeaderPanel" Panel.ZIndex="1" KeyboardNavigation.TabIndex="1" Grid.Column="0" IsItemsHost="true"/>
+            </ScrollViewer>
+            <ContentPresenter Grid.Row="1" ContentSource="SelectedContent"/>
+        </Grid>
+    </ControlTemplate>
+
+
+    <ControlTemplate x:Key="LeftTemplate" TargetType="TabControl">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <DockPanel x:Name="PART_DockPanel" Grid.Column="0" LastChildFill="True">
+                <ScrollViewer x:Name="headerScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Panel.ZIndex="1" DockPanel.Dock="Left">
+                    <TabPanel x:Name="headerPanel" IsItemsHost="true" KeyboardNavigation.TabIndex="1"/>
+                </ScrollViewer>
+            </DockPanel>
+
+            <ContentPresenter x:Name="PART_SelectedContentHost" Grid.Row="0" Grid.Column="1" ContentSource="SelectedContent"/>
+        </Grid>
+    </ControlTemplate>
+
+    <ControlTemplate x:Key="RightTemplate" TargetType="TabControl">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                
+            </Grid.ColumnDefinitions>
+
+            <DockPanel x:Name="PART_DockPanel" Grid.Column="1" LastChildFill="True">
+                <ScrollViewer x:Name="headerScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Panel.ZIndex="1" DockPanel.Dock="Left">
+                    <TabPanel x:Name="headerPanel" IsItemsHost="true" KeyboardNavigation.TabIndex="1"/>
+                </ScrollViewer>
+            </DockPanel>
+
+            <ContentPresenter x:Name="PART_SelectedContentHost" Grid.Row="0" Grid.Column="0" ContentSource="SelectedContent"/>
+        </Grid>
+    </ControlTemplate>
+
+
+
+
+
 </ResourceDictionary>

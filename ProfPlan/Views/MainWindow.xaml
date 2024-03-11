@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ProfPlan"
+        xmlns:local="clr-namespace:ProfPlan" 
+        xmlns:views="clr-namespace:ProfPlan.Views"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
@@ -11,13 +12,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="4*" />
-        </Grid.ColumnDefinitions>
-        
-        <Menu Grid.Row="0" Margin="5,5" Background="Transparent">
+
+        <Menu Grid.Row="0"  Margin="5,5" Background="White">
 
             <MenuItem Header="Файл" HorizontalAlignment="Left" FontSize="16">
                 <MenuItem Header="Создать" FontSize="14" HorizontalAlignment="Left" />
@@ -31,16 +27,33 @@
                 <ComboBoxItem Content="Факт"/>
             </ComboBox>
         </Menu>
-        
-        <ListBox Grid.Row="1" Grid.Column="0" x:Name="myListBox" SelectionMode="Single" 
- ItemsSource="{Binding DisplayedTables}"
-                 SelectedItem="{Binding SelectedTable}"
- DisplayMemberPath="Tablename">
+
+        <!--<ListBox Grid.Row="1" Grid.Column="0" x:Name="myListBox" SelectionMode="Single" 
+         ItemsSource="{Binding DisplayedTables}"
+         SelectedItem="{Binding SelectedTable}"
+         DisplayMemberPath="Tablename" Foreground="#DD000000">
         </ListBox>
-        
+
         <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="False" Width="3"
           HorizontalAlignment="Center" VerticalAlignment="Stretch" />
-        <DataGrid Grid.Row="1" Grid.Column="2" ItemsSource="{Binding SelectedTable.ExcelData}"/>
+        <DataGrid Grid.Row="1" Grid.Column="2"  ItemsSource="{Binding SelectedTable.ExcelData}" 
+           AutoGenerateColumns="False" >
+        </DataGrid>-->
 
+        <TabControl Style="{StaticResource MaterialDesignTabControl}" 
+            TabStripPlacement="{Binding TabStripPlacement, Mode=TwoWay}"  
+            Grid.Row="1" Name="MainTabControl" 
+            ItemsSource="{Binding DisplayedTables}"
+            ContentTemplateSelector="{StaticResource MyContentTemplateSelector}" 
+            SelectedItem="{Binding SelectedTable, Mode=TwoWay}"
+            Template="{Binding TabStripPlacement, Converter={StaticResource TabStripPlacementConverter}}">
+
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Tablename}"/>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+
+        </TabControl>
     </Grid>
 </Window>

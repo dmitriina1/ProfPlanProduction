@@ -38,28 +38,7 @@ namespace ProfPlan.Models
             }
         }
 
-        private ObservableCollection<TableCollection> _tablesCollection = new ObservableCollection<TableCollection>();
-        public ObservableCollection<TableCollection> TablesCollection
-        {
-            get { return _tablesCollection; }
-            set
-            {
-                if (_tablesCollection != value)
-                {
-                    _tablesCollection = value;
-                    OnPropertyChanged(nameof(TablesCollection));
-                }
-            }
-        }
-        public ObservableCollection<TableCollection> TablesCollectionWithP
-        {
-            get { return new ObservableCollection<TableCollection>(TablesCollection.Where(tc => tc.Tablename.StartsWith("П_")).ToList()); }
-        }
-
-        public ObservableCollection<TableCollection> TablesCollectionWithF
-        {
-            get { return new ObservableCollection<TableCollection>(TablesCollection.Where(tc => tc.Tablename.StartsWith("Ф_")).ToList()); }
-        }
+        
         public TableCollection(string tablename, ObservableCollection<ExcelData> col)
         {
             Tablename = tablename;

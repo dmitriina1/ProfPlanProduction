@@ -12,10 +12,13 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows;
 using ExcelDataReader;
+using System.ComponentModel;
+using System.Windows.Controls;
+using ProfPlan.ViewModels.Base;
 
 namespace ProfPlan.ViewModels
 {
-    internal class MainViewModel : TableCollection
+    internal class MainViewModel : ViewModel
     {
         private string directoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"Расчет нагрузки {DateTime.Today:dd-MM-yyyy}");
         private int Number = 1;
@@ -43,7 +46,7 @@ namespace ProfPlan.ViewModels
                                 ConfigureDataTable = (_) => new ExcelDataTableConfiguration() { UseHeaderRow = false }
                             });
                             tableCollection = result.Tables;
-                            TablesCollection.Clear();
+                            TablesCollections.Clear();
 
                             foreach (DataTable table in tableCollection)
                             {
@@ -237,13 +240,13 @@ namespace ProfPlan.ViewModels
                                 }
 
                                 // Добавление коллекции в TablesCollection
-                                TablesCollection.Add(new TableCollection(tabname, list));
+                                TablesCollections.Add(new TableCollection(tabname, list));
                             }
                         }
                     }
 
                     // Обновление свойства привязок данных в XAML
-                    OnPropertyChanged(nameof(TablesCollection));
+                    OnPropertyChanged(nameof(TablesCollections));
                     UpdateListBoxItemsSource();
                 }
             }
@@ -286,11 +289,11 @@ namespace ProfPlan.ViewModels
         {
             if (SelectedComboBoxIndex == 0)
             {
-                DisplayedTables = TablesCollectionWithP;
+                DisplayedTables = TablesCollections.GetTablesCollectionWithP();
             }
             else if (SelectedComboBoxIndex == 1)
             {
-                DisplayedTables = TablesCollectionWithF;
+                DisplayedTables = TablesCollections.GetTablesCollectionWithF();
             }
         }
 
@@ -307,43 +310,30 @@ namespace ProfPlan.ViewModels
                 {
                     _selectedTable = value;
                     OnPropertyChanged(nameof(SelectedTable));
-
                     // Обновляем данные в DataGrid при выборе нового элемента в ListBox
-                    UpdateDataGrid();
+                    
+
+
                 }
             }
         }
 
-        private void UpdateDataGrid()
-        {
-            // Проверяем, что SelectedTable не null и что у него есть данные ExcelData
-            if (SelectedTable != null && SelectedTable.ExcelData != null)
-            {
-                // Обновляем ItemsSource для DataGrid
-                DataGridCollection = SelectedTable.ExcelData;
-            }
-            else
-            {
-                // Если данных нет, можно очистить ItemsSource для DataGrid
-                DataGridCollection = null;
-            }
-        }
+        private Dock _tabStripPlacement = Dock.Top;
 
-        private ObservableCollection<ExcelData> _dataGridCollection;
-
-        public ObservableCollection<ExcelData> DataGridCollection
+        public Dock TabStripPlacement
         {
-            get { return _dataGridCollection; }
+            get { return _tabStripPlacement; }
             set
             {
-                if (_dataGridCollection != value)
+                if (_tabStripPlacement != value)
                 {
-                    _dataGridCollection = value;
-                    OnPropertyChanged(nameof(DataGridCollection));
+                    _tabStripPlacement = value;
+                    OnPropertyChanged(nameof(TabStripPlacement));
                 }
             }
         }
+        // Выбор содержимого dataGrid
 
 
-    }
+    }   
 }
