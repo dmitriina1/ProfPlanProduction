@@ -23,6 +23,7 @@ namespace ProfPlan.ViewModels
     internal class MainViewModel : ViewModel
     {
         private string directoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"Расчет нагрузки {DateTime.Today:dd-MM-yyyy}");
+        private string filePath = "";
         private int Number = 1;
         private RelayCommand _loadDataCommand;
         private DataTableCollection tableCollection;
@@ -248,7 +249,7 @@ namespace ProfPlan.ViewModels
 
         private void LoadData(object parameter)
         {
-            string filePath = GetExcelFilePath();
+            filePath = GetExcelFilePath();
             if (!string.IsNullOrEmpty(filePath))
             {
                 tableCollection = ReadExcelData(filePath).Tables;
@@ -496,9 +497,13 @@ namespace ProfPlan.ViewModels
             {
                 SaveToExcelAs();
             }
+            else if (filePath != "")
+            {
+                workbook.SaveAs(filePath);
+            }
             else
             {
-                workbook.SaveAs(directoryPath);
+                SaveToExcelAs();
             }
         }
 
@@ -511,18 +516,15 @@ namespace ProfPlan.ViewModels
         }
         private void ExitFromApp(object parameter)
         {
-            // Вызов метода выхода из приложения или другой логики выхода
-            // Например, закрытие окна или вызов Application.Current.Shutdown()
-
-            Application.Current.Shutdown(); // Пример использования метода Shutdown для выхода из приложения
+            Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
         }
 
         //Создать
-        private RelayCommand _CreateCommand;
+        private RelayCommand _createCommand;
 
         public ICommand CreateCommand
         {
-            get { return _exitCommand ?? (_exitCommand = new RelayCommand(CreateBaseTableCollection)); }
+            get { return _createCommand ?? (_createCommand = new RelayCommand(CreateBaseTableCollection)); }
         }
         private void CreateBaseTableCollection(object parameter)
         {
@@ -535,6 +537,127 @@ namespace ProfPlan.ViewModels
                 TablesCollections.Add(new TableCollection() { Tablename = "Ф_ПИиИС" });
             }
             UpdateListBoxItemsSource();
+        }
+
+        //Таблица
+        //Очистить таблицу
+        private RelayCommand _clearTableCommand;
+
+        public ICommand ClearTableCommand
+        {
+            get { return _clearTableCommand ?? (_clearTableCommand = new RelayCommand(ClearTable)); }
+        }
+        private void ClearTable(object parameter)
+        {
+            if(SelectedTable != null && SelectedComboBoxIndex != -1)
+            {
+                TablesCollections.RemoveTableAtIndex(TablesCollections.GetTableIndexByName(SelectedTable.Tablename, SelectedComboBoxIndex));
+                UpdateListBoxItemsSource();
+            }
+        }
+
+        //Перенести преподавателей
+        private RelayCommand _moveTeachersCommand;
+        public ICommand MoveTeachersCommand
+        {
+            get { return _moveTeachersCommand ?? (_moveTeachersCommand = new RelayCommand(MoveTeachers)); }
+        }
+        private void MoveTeachers(object parameter)
+        {
+            int ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
+            int stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
+            if (ftableindex != -1 && stableindex != -1)
+            {
+                for (int i = 0; i < TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count; i++)
+                {
+                    if (TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] is ExcelModel excelModel && excelModel.Teacher == "")
+                    {
+                        ExcelModel stableData = TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] as ExcelModel;
+                        ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
+
+                        if (stableData != null && ftableData != null &&
+                            stableData.Term == ftableData.Term &&
+                            stableData.Group == ftableData.Group &&
+                            stableData.Institute == ftableData.Institute &&
+                            stableData.FormOfStudy == ftableData.FormOfStudy &&
+                            ftableData.Teacher != "")
+                        {
+                            stableData.Teacher = ftableData.Teacher;
+                        }
+                    }
+                }
+                
+            }
+            SelectedTable = null;
+            UpdateListBoxItemsSource();
+        }
+
+        private RelayCommand _generateTeachersLists;
+        public ICommand GenerateTeachersLists
+        {
+            get { return _generateTeachersLists ?? (_generateTeachersLists = new RelayCommand(GenerateTeacher)); }
+        }
+        private void GenerateTeacher(object parameter)
+        {
+            if(SelectedComboBoxIndex != -1 && TablesCollections.GetTableIndexForGenerate("ПИиИС", SelectedComboBoxIndex) != -1)
+            {
+                string prefix;
+                if(SelectedComboBoxIndex == 0)
+                {
+                    prefix = "П_";
+                }
+                else
+                {
+                    prefix = "Ф_";
+                }
+                int mainList = TablesCollections.GetTableIndexByName(prefix + "ПИиИС", SelectedComboBoxIndex);
+                var uniqueTeachers = TablesCollections.GetTablesCollection()[mainList].ExcelData
+               .Where(data => data is ExcelModel) // Фильтрация по типу ExcelModel
+               .Select(data => ((ExcelModel)data).Teacher) // Приведение к ExcelModel и выбор Teacher
+               .Distinct()
+               .ToList();
+                ObservableCollection<ExcelData> totallist = new ObservableCollection<ExcelData>();
+                foreach (var teacher in uniqueTeachers)
+                {
+                    var teacherTableCollection = new TableCollection() { };
+
+                    if (teacher.ToString() != "")
+                        teacherTableCollection = new TableCollection(prefix+teacher.ToString().Split(' ')[0]);
+                    else
+                        teacherTableCollection = new TableCollection(prefix+"Незаполненные");
+                    var teacherRows = TablesCollections.GetTablesCollection()[mainList].ExcelData
+                    .Where(data => data is ExcelModel && ((ExcelModel)data).Teacher == teacher)
+                    .ToList();
+                    foreach (ExcelModel techrow in teacherRows)
+                    {
+                        techrow.PropertyChanged += teacherTableCollection.ExcelModel_PropertyChanged;
+                        teacherTableCollection.ExcelData.Add(techrow);
+
+                    }
+                    teacherTableCollection.SubscribeToExcelDataChanges();
+                    TablesCollections.Add(teacherTableCollection);
+                    //Реализация листа Итого:
+
+                    if (teacherTableCollection.Tablename != prefix + "Незаполненные")
+                    {
+                        totallist.Add(new ExcelTotal(
+                        teacher,
+                            null,
+                        null,
+                            teacherTableCollection.TotalHours,
+                           teacherTableCollection.AutumnHours,
+                           teacherTableCollection.SpringHours,
+                            null)
+                            );
+
+                    }
+                }
+                string tabname = prefix + "Итого";
+                TablesCollections.Add(new TableCollection(tabname, totallist));
+                
+                TablesCollections.SortTablesCollection();
+                UpdateListBoxItemsSource();
+            }
         }
     }
 }

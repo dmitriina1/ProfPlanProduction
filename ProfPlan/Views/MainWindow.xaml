@@ -22,6 +22,11 @@
                 <MenuItem Header="Сохранить как" FontSize="14" HorizontalAlignment="Left" Command="{Binding SaveDataAsCommand}"/>
                 <MenuItem Header="Выход" FontSize="14" HorizontalAlignment="Left" Command="{Binding ExitCommand}"/>
             </MenuItem>
+            <MenuItem Header="Таблица" HorizontalAlignment="Left" FontSize="16">
+                <MenuItem Header="Очистить таблицу" FontSize="14" HorizontalAlignment="Left" Command="{Binding ClearTableCommand}"/>
+                <MenuItem Header="Перенести преподавателей" FontSize="14" HorizontalAlignment="Left" Command="{Binding MoveTeachersCommand}"/>
+                <MenuItem Header="Сгенерировать листы" FontSize="14" HorizontalAlignment="Left" Command="{Binding GenerateTeachersLists}"/>
+            </MenuItem>
             <ComboBox x:Name="comboBox" SelectedIndex="{Binding SelectedComboBoxIndex}">
                 <ComboBoxItem  Content="План"/>
                 <ComboBoxItem Content="Факт"/>
