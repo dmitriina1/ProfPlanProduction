@@ -38,5 +38,32 @@ namespace ProfPlan.Models
             return new ObservableCollection<TableCollection>(
                 TablesCollection.Where(tc => tc.Tablename.StartsWith("Ф_")).ToList());
         }
+
+        public static bool GetTableByName(string tableName, int selectedIndex)
+        {
+            if(selectedIndex == 0)
+            {
+                foreach (TableCollection table in TablesCollections.GetTablesCollectionWithP())
+                {
+                    if (table.Tablename.IndexOf(tableName, StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        return true;
+                    }
+                }
+            }
+            else if(selectedIndex == 1)
+            {
+                foreach (TableCollection table in TablesCollections.GetTablesCollectionWithF())
+                {
+                    if (table.Tablename.IndexOf(tableName, StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+
+        }
+
     }
 }

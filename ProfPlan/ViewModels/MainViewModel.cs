@@ -501,5 +501,40 @@ namespace ProfPlan.ViewModels
                 workbook.SaveAs(directoryPath);
             }
         }
+
+        //Выход
+        private RelayCommand _exitCommand;
+
+        public ICommand ExitCommand
+        {
+            get { return _exitCommand ?? (_exitCommand = new RelayCommand(ExitFromApp)); }
+        }
+        private void ExitFromApp(object parameter)
+        {
+            // Вызов метода выхода из приложения или другой логики выхода
+            // Например, закрытие окна или вызов Application.Current.Shutdown()
+
+            Application.Current.Shutdown(); // Пример использования метода Shutdown для выхода из приложения
+        }
+
+        //Создать
+        private RelayCommand _CreateCommand;
+
+        public ICommand CreateCommand
+        {
+            get { return _exitCommand ?? (_exitCommand = new RelayCommand(CreateBaseTableCollection)); }
+        }
+        private void CreateBaseTableCollection(object parameter)
+        {
+            if(SelectedComboBoxIndex == 0 && TablesCollections.GetTableByName("ПИиИС",SelectedComboBoxIndex) == false)
+            {
+                TablesCollections.Add(new TableCollection() { Tablename = "П_ПИиИС" });
+            }
+            else if (SelectedComboBoxIndex == 1 && TablesCollections.GetTableByName("ПИиИС", SelectedComboBoxIndex) == false)
+            {
+                TablesCollections.Add(new TableCollection() { Tablename = "Ф_ПИиИС" });
+            }
+            UpdateListBoxItemsSource();
+        }
     }
 }
