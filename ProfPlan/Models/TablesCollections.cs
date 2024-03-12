@@ -20,7 +20,16 @@ namespace ProfPlan.Models
         }
         public static void Add(TableCollection tabCol)
         {
-            TablesCollection.Add(tabCol);
+            int foundIndex = GetTableIndexByName(tabCol.Tablename);
+
+            if (foundIndex != -1)
+            {
+                TablesCollection[foundIndex] = tabCol;
+            }
+            else
+            {
+                TablesCollection.Add(tabCol);
+            }
         }
 
         public static ObservableCollection<TableCollection> GetTablesCollection()
@@ -65,7 +74,7 @@ namespace ProfPlan.Models
             return false;
 
         }
-        public static int GetTableIndexByName(string tableName, int selectedIndex)
+        public static int GetTableIndexByName(string tableName, int selectedIndex = -2)
         {
 
             if (selectedIndex == -1)
