@@ -23,6 +23,10 @@ namespace ProfPlan.ViewModels
 {
     internal class MainViewModel : ViewModel
     {
+        public MainViewModel()
+        {
+            ExcelModel.UpdateSharedTeachers();
+        }
         private string directoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"Расчет нагрузки {DateTime.Today:dd-MM-yyyy}");
         private string filePath = "";
         private int Number = 1;

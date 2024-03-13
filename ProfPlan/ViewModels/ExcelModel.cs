@@ -10,23 +10,30 @@ namespace ProfPlan.ViewModels
 {
     internal class ExcelModel : ExcelData
     {
-        private static readonly ObservableCollection<string> sharedTeachers = new ObservableCollection<string>();
+        private static ObservableCollection<string> sharedTeachers = new ObservableCollection<string>();
 
-        //public ObservableCollection<string> Teachers
-        //{
-        //    get { return sharedTeachers; }
-        //    set
-        //    {
-        //        if (sharedTeachers != value)
-        //        {
-        //            sharedTeachers = value;
-        //            OnPropertyChanged(nameof(Teachers));
-        //        }
-        //    }
-        //}
+        public static ObservableCollection<string> Teachers
+        {
+            get { return sharedTeachers; }
+            set
+            {
+                if (sharedTeachers != value)
+                {
+                    sharedTeachers = value;
+                }
+            }
+        }
         public static void AddToSharedTeachers(string teacher)
         {
             sharedTeachers.Add(teacher);
+        }
+        public static void UpdateSharedTeachers()
+        {
+            sharedTeachers.Clear();
+            foreach(var teacher in TeachersManager.GetTeachers())
+            {
+                sharedTeachers.Add($"{teacher.LastName} {teacher.FirstName[0]}.{teacher.MiddleName[0]}.");
+            }
         }
         public int Number { get; set; }
         public string Teacher { get; set; }

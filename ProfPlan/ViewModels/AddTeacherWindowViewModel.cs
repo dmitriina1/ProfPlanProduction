@@ -46,6 +46,7 @@ namespace ProfPlan.ViewModels
                         }
                     else doubleValue = null;
                     TeachersManager.AddTeacher(new Teacher() { LastName = Lastname, FirstName = Firstname, MiddleName = Middlename, Position = Position, AcademicDegree = AcademicDegree, Workload = doubleValue });
+                    ExcelModel.UpdateSharedTeachers();
                 }
                 catch (FormatException)
                 {
