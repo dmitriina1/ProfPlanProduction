@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:ProfPlan" 
         xmlns:views="clr-namespace:ProfPlan.Views"
         mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Grid.RowDefinitions>
@@ -26,6 +27,9 @@
                 <MenuItem Header="Очистить таблицу" FontSize="14" HorizontalAlignment="Left" Command="{Binding ClearTableCommand}"/>
                 <MenuItem Header="Перенести преподавателей" FontSize="14" HorizontalAlignment="Left" Command="{Binding MoveTeachersCommand}"/>
                 <MenuItem Header="Сгенерировать листы" FontSize="14" HorizontalAlignment="Left" Command="{Binding GenerateTeachersLists}"/>
+            </MenuItem>
+            <MenuItem Header="Преподаватели" HorizontalAlignment="Left" FontSize="16">
+                <MenuItem Header="Список преподавателей" FontSize="14" HorizontalAlignment="Left" Command="{Binding ShowTeachersWindowCommand}"/>
             </MenuItem>
             <ComboBox x:Name="comboBox" SelectedIndex="{Binding SelectedComboBoxIndex}">
                 <ComboBoxItem  Content="План"/>

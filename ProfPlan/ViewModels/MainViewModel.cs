@@ -17,6 +17,7 @@ using System.Windows.Controls;
 using ProfPlan.ViewModels.Base;
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Spreadsheet;
+using ProfPlan.Views;
 
 namespace ProfPlan.ViewModels
 {
@@ -658,6 +659,22 @@ namespace ProfPlan.ViewModels
                 TablesCollections.SortTablesCollection();
                 UpdateListBoxItemsSource();
             }
+        }
+
+        //Список преподавателей
+        private RelayCommand _showTeachersWindowCommand;
+        public ICommand ShowTeachersWindowCommand
+        {
+            get { return _showTeachersWindowCommand ?? (_showTeachersWindowCommand = new RelayCommand(ShowTeachersWindow)); }
+        }
+        private void ShowTeachersWindow(object obj)
+        {
+            var techerswindow = obj as Window;
+
+            TeachersWindow teacherlist = new TeachersWindow();
+            teacherlist.Owner = techerswindow;
+            teacherlist.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            teacherlist.ShowDialog();
         }
     }
 }

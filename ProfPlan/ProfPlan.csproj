@@ -149,9 +149,23 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Models\TablesCollections.cs" />
+    <Compile Include="Models\Teacher.cs" />
+    <Compile Include="Models\TeachersManager.cs" />
+    <Compile Include="ViewModels\AddTeacherWindowViewModel.cs" />
+    <Compile Include="ViewModels\TeachersWindowViewModel.cs" />
+    <Compile Include="Views\AddTeacherWindow.xaml.cs">
+      <DependentUpon>AddTeacherWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\MyContentTemplateSelector.cs" />
     <Compile Include="Views\TabStripPlacementConverter.cs" />
+    <Compile Include="Views\TeachersWindow.xaml.cs">
+      <DependentUpon>TeachersWindow.xaml</DependentUpon>
+    </Compile>
     <Page Include="Resources\Styles\Windows.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\AddTeacherWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -175,6 +189,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\TeachersWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

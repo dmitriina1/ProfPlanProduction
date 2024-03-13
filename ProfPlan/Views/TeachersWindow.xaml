@@ -1,0 +1,33 @@
+﻿<Window x:Class="ProfPlan.Views.TeachersWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ProfPlan.Views"
+        mc:Ignorable="d"
+        Title="TeachersWindow" Height="450" Width="900">
+    <Grid Background="#F5F5F5">
+        <Grid Background="White" Grid.Row="1" Margin="25,40,25,15" >
+            <Button Height="30" Style="{StaticResource ButtonStyle}"  Command="{Binding ShowWindowCommand}"  Content="Добавить" Width="100" VerticalContentAlignment="Center" Padding="5" Margin="25" VerticalAlignment="Top" HorizontalAlignment="Right" BorderThickness="1" BorderBrush="#E0E0E0"  />
+            <ListView ItemsSource="{Binding Teachers}" Name="TeacherList" BorderBrush="#cdcdcd" Margin="25,70,25,25" Padding="0">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn DisplayMemberBinding="{Binding LastName}" Header="Фамилия"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding FirstName}" Header="Имя"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding MiddleName}" Header="Отчество"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding Position}" Header="Должность"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding AcademicDegree}" Header="Учетная степень"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding Workload}" Header="Размер ставки"/>
+                    </GridView>
+                </ListView.View>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <EventSetter Event="MouseDoubleClick" Handler="UserListViewItem_DoubleClick"/>
+                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="UserList_PreviewMouseRightButtonDown"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+
+        </Grid>
+    </Grid>
+</Window>
