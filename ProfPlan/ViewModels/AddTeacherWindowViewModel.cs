@@ -45,13 +45,21 @@ namespace ProfPlan.ViewModels
                                 doubleValue = Convert.ToDouble(Workload);
                         }
                     else doubleValue = null;
-                    TeachersManager.AddTeacher(new Teacher() { LastName = Lastname, FirstName = Firstname, MiddleName = Middlename, Position = Position, AcademicDegree = AcademicDegree, Workload = doubleValue });
-                    ExcelModel.UpdateSharedTeachers();
+                    if (Lastname !=null && Firstname != null)
+                    {
+                        TeachersManager.AddTeacher(new Teacher() { LastName = Lastname, FirstName = Firstname, MiddleName = Middlename, Position = Position, AcademicDegree = AcademicDegree, Workload = doubleValue });
+                        ExcelModel.UpdateSharedTeachers();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Ячейки Фамилия и Имя должны быть заполнены");
+                    }
                 }
                 catch (FormatException)
                 {
                     MessageBox.Show("В ячейку Ставка было вписано не число!");
                     doubleValue = null;
+                    Workload = null;
                 }
             }
             else

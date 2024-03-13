@@ -30,9 +30,16 @@ namespace ProfPlan.ViewModels
         public static void UpdateSharedTeachers()
         {
             sharedTeachers.Clear();
+            string lname, fname, mname;
             foreach(var teacher in TeachersManager.GetTeachers())
             {
-                sharedTeachers.Add($"{teacher.LastName} {teacher.FirstName[0]}.{teacher.MiddleName[0]}.");
+                lname=teacher.LastName;
+                fname=teacher.FirstName;
+                mname=teacher.MiddleName;
+                if(mname.Length > 0) 
+                    sharedTeachers.Add($"{lname} {fname[0]}.{mname[0]}.");
+                else
+                    sharedTeachers.Add($"{lname} {fname[0]}.");
             }
         }
         public int Number { get; set; }
