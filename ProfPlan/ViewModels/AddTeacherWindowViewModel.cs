@@ -32,7 +32,26 @@ namespace ProfPlan.ViewModels
             Teacher checkUser = TeachersManager.GetTeacherByName(Lastname, Firstname, Middlename);
             if (existingUser == null && CanAdd == true && checkUser == null)
             {
-                TeachersManager.AddTeacher(new Teacher() { LastName = Lastname, FirstName = Firstname, MiddleName = Middlename, Position = Position, AcademicDegree = AcademicDegree, Workload = Workload });
+                double? doubleValue;
+                try
+                {
+                    System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+                    if (Workload!=null)
+                        if(Workload.IndexOf(",")==-1)
+                     doubleValue = Convert.ToDouble(Workload);
+                    else
+                        {
+                            Workload = Workload.Replace(",", ".");
+                                doubleValue = Convert.ToDouble(Workload);
+                        }
+                    else doubleValue = null;
+                    TeachersManager.AddTeacher(new Teacher() { LastName = Lastname, FirstName = Firstname, MiddleName = Middlename, Position = Position, AcademicDegree = AcademicDegree, Workload = doubleValue });
+                }
+                catch (FormatException)
+                {
+                    MessageBox.Show("В ячейку Ставка было вписано не число!");
+                    doubleValue = null;
+                }
             }
             else
             {
@@ -46,7 +65,7 @@ namespace ProfPlan.ViewModels
                 existingUser.MiddleName = Middlename;
                 existingUser.Position = Position;
                 existingUser.AcademicDegree = AcademicDegree;
-                existingUser.Workload = Workload;
+                existingUser.Workload = Workload.ToNullable<double>();
 
                 MessageBox.Show("Данные пользователя обновлены.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -59,7 +78,7 @@ namespace ProfPlan.ViewModels
             Middlename = teacher?.MiddleName;
             Position = teacher?.Position;
             AcademicDegree = teacher?.AcademicDegree;
-            Workload = teacher?.Workload;
+            Workload = teacher.Workload.ToNullable<double>().ToString();
             existingUser = TeachersManager.GetTeacherByName(Lastname, Firstname, Middlename);
             if (existingUser == null)
             {

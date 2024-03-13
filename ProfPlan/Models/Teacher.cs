@@ -74,8 +74,8 @@ namespace ProfPlan.Models
                 }
             }
         }
-        private string _workload;
-        public string Workload
+        private double? _workload;
+        public double? Workload
         {
             get { return _workload; }
             set
@@ -88,6 +88,16 @@ namespace ProfPlan.Models
             }
         }
         public Teacher() { }
+        public Teacher(string lastName,  string firstName,  string middleName,  string position, string academicDegree, double? workload)
+        {
+            LastName=lastName;
+            FirstName=firstName;
+            MiddleName=middleName;
+            Position=position;
+            AcademicDegree=academicDegree;
+            Workload=workload;
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)

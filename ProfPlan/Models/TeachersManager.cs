@@ -13,15 +13,22 @@ namespace ProfPlan.Models
 
         public static ObservableCollection<Teacher> GetTeachers()
         {
+            var teacherDatabase = new TeacherDatabase();
+            _DatabaseUsers = teacherDatabase.LoadTeachers();
             return _DatabaseUsers;
 
         }
-
+        public TeachersManager()
+        {
+            var teacherDatabase = new TeacherDatabase();
+            _DatabaseUsers = teacherDatabase.LoadTeachers();
+        }
 
         public static void AddTeacher(Teacher teacher)
         {
             _DatabaseUsers.Add(teacher);
-
+            var teacherDatabase = new TeacherDatabase();
+            teacherDatabase.SaveTeachers(_DatabaseUsers);
         }
         public static Teacher GetTeacherByName(string lastname, string firstname, string middlename)
         {
