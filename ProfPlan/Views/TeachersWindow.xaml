@@ -5,10 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProfPlan.Views"
         mc:Ignorable="d"
-        Title="TeachersWindow" Height="450" Width="900">
+        WindowStartupLocation="CenterScreen"
+        Title="TeachersWindow" Height="400" Width="900">
     <Grid Background="#F5F5F5">
-        <Grid Background="White" Grid.Row="1" Margin="25,40,25,15" >
-            <Button Height="30" Style="{StaticResource ButtonStyle}"  Command="{Binding ShowWindowCommand}"  Content="Добавить" Width="100" VerticalContentAlignment="Center" Padding="5" Margin="25" VerticalAlignment="Top" HorizontalAlignment="Right" BorderThickness="1" BorderBrush="#E0E0E0"  />
+        <Grid Background="White" Grid.Row="1" Margin="25,10" >
+            <Button Height="30" Style="{StaticResource ButtonStyle}"  Command="{Binding ShowAddTeacherWindowCommand}"  Content="Добавить" Width="100" VerticalContentAlignment="Center" Padding="5" Margin="25" VerticalAlignment="Top" HorizontalAlignment="Right" BorderThickness="1" BorderBrush="#E0E0E0"  />
             <ListView ItemsSource="{Binding Teachers}" Name="TeacherList" BorderBrush="#cdcdcd" Margin="25,70,25,25" Padding="0">
                 <ListView.View>
                     <GridView>

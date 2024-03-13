@@ -12,8 +12,6 @@ namespace ProfPlan.ViewModels
 {
     internal class AddTeacherWindowViewModel
     {
-        public ICommand AddTeacherCommand { get; set; }
-
         public string Lastname { get; set; }
         public string Firstname { get; set; }
         public string Middlename { get; set; }
@@ -23,15 +21,10 @@ namespace ProfPlan.ViewModels
         private bool CanAdd = true;
         private Teacher existingUser { get; set; }
 
-
-        public AddTeacherWindowViewModel()
+        private RelayCommand _addTeacherCommand;
+        public ICommand AddTeacherCommand
         {
-            AddTeacherCommand = new RelayCommand(AddTeacher, CanAddTeacher);
-        }
-
-        private bool CanAddTeacher(object obj)
-        {
-            return true;
+            get { return _addTeacherCommand ?? (_addTeacherCommand = new RelayCommand(AddTeacher)); }
         }
 
         private void AddTeacher(object obj)

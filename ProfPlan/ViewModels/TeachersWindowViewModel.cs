@@ -15,26 +15,16 @@ namespace ProfPlan.ViewModels
 {
     internal class TeachersWindowViewModel : ViewModel
     {
-        public ObservableCollection<Teacher> Teachers { get; set; }
-
-        public ICommand ShowWindowCommand { get; set; }
+        public ObservableCollection<Teacher> Teachers { get; set; } = TeachersManager.GetTeachers();
 
 
-
-        public TeachersWindowViewModel()
+        private RelayCommand _showAddTeacherWindowCommand;
+        public ICommand ShowAddTeacherWindowCommand
         {
-            Teachers = TeachersManager.GetTeachers();
-
-            ShowWindowCommand = new RelayCommand(ShowWindow, CanShowWindow);
-
+            get { return _showAddTeacherWindowCommand ?? (_showAddTeacherWindowCommand = new RelayCommand(ShowAddTeacherWindow)); }
         }
 
-        private bool CanShowWindow(object obj)
-        {
-            return true;
-        }
-
-        private void ShowWindow(object obj)
+        private void ShowAddTeacherWindow(object obj)
         {
             var mainWindow = obj as Window;
 
@@ -42,10 +32,7 @@ namespace ProfPlan.ViewModels
             addTeacherWin.Owner = mainWindow;
             addTeacherWin.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             addTeacherWin.ShowDialog();
-
-
         }
-
 
         private Teacher _selectedTeacher;
         public Teacher SelectedTeacher
@@ -57,8 +44,6 @@ namespace ProfPlan.ViewModels
                 OnPropertyChanged(nameof(SelectedTeacher));
             }
         }
-
-
 
         public void RemoveSelectedTeacher(Teacher teacher)
         {
