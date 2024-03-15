@@ -170,6 +170,7 @@
     <Compile Include="Models\TeacherDatabase.cs" />
     <Compile Include="Models\TeachersManager.cs" />
     <Compile Include="ViewModels\AddTeacherWindowViewModel.cs" />
+    <Compile Include="ViewModels\ReportViewModel.cs" />
     <Compile Include="ViewModels\TeachersWindowViewModel.cs" />
     <Compile Include="Views\AddTeacherWindow.xaml.cs">
       <DependentUpon>AddTeacherWindow.xaml</DependentUpon>

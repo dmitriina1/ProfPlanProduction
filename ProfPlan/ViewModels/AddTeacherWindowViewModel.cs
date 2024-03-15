@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows;
+using DocumentFormat.OpenXml;
 
 namespace ProfPlan.ViewModels
 {
@@ -54,6 +55,7 @@ namespace ProfPlan.ViewModels
                     {
                         MessageBox.Show("Ячейки Фамилия и Имя должны быть заполнены");
                     }
+
                 }
                 catch (FormatException)
                 {
@@ -64,19 +66,30 @@ namespace ProfPlan.ViewModels
             }
             else
             {
-                if (existingUser == null)
+                try
                 {
-                    existingUser = TeachersManager.GetTeacherByName(Lastname, Firstname, Middlename);
+                    if (existingUser == null)
+                    {
+                        existingUser = TeachersManager.GetTeacherByName(Lastname, Firstname, Middlename);
+
+                    }
+                    existingUser.LastName = Lastname;
+                    existingUser.FirstName = Firstname;
+                    existingUser.MiddleName = Middlename;
+                    existingUser.Position = Position;
+                    existingUser.AcademicDegree = AcademicDegree;
+                    existingUser.Workload = Workload.ToNullable<double>();
+
+                    TeachersManager.UpdateTeacher(existingUser, TeachersManager.GetTeacherIndex(existingUser));
+                    MessageBox.Show("Данные пользователя обновлены.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ExcelModel.UpdateSharedTeachers();
 
                 }
-                existingUser.LastName = Lastname;
-                existingUser.FirstName = Firstname;
-                existingUser.MiddleName = Middlename;
-                existingUser.Position = Position;
-                existingUser.AcademicDegree = AcademicDegree;
-                existingUser.Workload = Workload.ToNullable<double>();
-
-                MessageBox.Show("Данные пользователя обновлены.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                catch (FormatException)
+                {
+                    MessageBox.Show("В ячейку Ставка было вписано не число!");
+                    Workload = null;
+                }
             }
 
         }

@@ -9,8 +9,8 @@ namespace ProfPlan.Models
     internal class ExcelTotal : ExcelData
     {
         public string Teacher { get; set; }
-        private int? _bet;
-        public int? Bet
+        private double? _bet;
+        public double? Bet
         {
             get { return _bet; }
             set
@@ -55,7 +55,7 @@ namespace ProfPlan.Models
         public double? AutumnHours { get; set; }
         public double? SpringHours { get; set; }
         public ExcelTotal() { }
-        public ExcelTotal(string techer, int? bet, double? betpercent, double? total, double? autumnhours, double? springHours, double? difference)
+        public ExcelTotal(string techer, double? bet, double? betpercent, double? total, double? autumnhours, double? springHours, double? difference)
         {
             Teacher = techer;
             Bet = bet;
@@ -81,6 +81,17 @@ namespace ProfPlan.Models
                     else _difference = null;
                     OnPropertyChanged(nameof(Difference));
                 }
+            }
+        }
+        public void DifferenceCalc()
+        {
+            if (Bet != null && TotalHours != null)
+            {
+                Difference = Math.Round(Convert.ToDouble(TotalHours - Bet), 2);
+            }
+            else
+            {
+                Difference = null;
             }
         }
     }

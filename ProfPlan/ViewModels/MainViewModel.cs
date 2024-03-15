@@ -643,11 +643,24 @@ namespace ProfPlan.ViewModels
                     TablesCollections.Add(teacherTableCollection);
                     //Реализация листа Итого:
 
+                    double? bet = null;
+                    string lname, fname, mname;
                     if (teacherTableCollection.Tablename != prefix + "Незаполненные")
                     {
+                        foreach(Teacher teach in TeachersManager.GetTeachers())
+                        {
+                            lname=teach.LastName;
+                            fname=teach.FirstName;
+                            mname=teach.MiddleName;
+                            if($"{lname} {fname[0]}.{mname[0]}." == teacher)
+                            {
+                                bet = teach.Workload;
+                            }
+
+                        }
                         totallist.Add(new ExcelTotal(
-                        teacher,
-                            null,
+                        teacher.IndexOf(' ') != -1 ? teacher.Substring(0, teacher.IndexOf(' ')) : teacher,
+                            bet,
                         null,
                             teacherTableCollection.TotalHours,
                            teacherTableCollection.AutumnHours,
@@ -658,6 +671,10 @@ namespace ProfPlan.ViewModels
                     }
                 }
                 string tabname = prefix + "Итого";
+                foreach(ExcelTotal list in totallist)
+                {
+                    list.DifferenceCalc();
+                }
                 TablesCollections.Add(new TableCollection(tabname, totallist));
                 
                 TablesCollections.SortTablesCollection();
@@ -679,6 +696,19 @@ namespace ProfPlan.ViewModels
             teacherlist.Owner = techerswindow;
             teacherlist.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             teacherlist.ShowDialog();
+        }
+
+        //Отчеты
+        private RelayCommand _loadCalcReport;
+        public ICommand LoadCalcReport
+        {
+            get { return _loadCalcReport ?? (_loadCalcReport = new RelayCommand(CreateLoadCalcReport)); }
+        }
+
+        private void CreateLoadCalcReport(object obj)
+        {
+            ReportViewModel loadCalcVM = new ReportViewModel();
+            loadCalcVM.SumAllTeachersTables();
         }
     }
 }

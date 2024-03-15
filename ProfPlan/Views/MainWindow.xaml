@@ -31,6 +31,10 @@
             <MenuItem Header="Преподаватели" HorizontalAlignment="Left" FontSize="16">
                 <MenuItem Header="Список преподавателей" FontSize="14" HorizontalAlignment="Left" Command="{Binding ShowTeachersWindowCommand}"/>
             </MenuItem>
+            <MenuItem Header="Отчеты" HorizontalAlignment="Left" FontSize="16">
+                <MenuItem Header="Бланки нагрузки" FontSize="14" HorizontalAlignment="Left" Command="{Binding LoadCalcReport}"/>
+                <MenuItem Header="Индивидуальные планы" FontSize="14" HorizontalAlignment="Left"/>
+            </MenuItem>
             <ComboBox x:Name="comboBox" SelectedIndex="{Binding SelectedComboBoxIndex}">
                 <ComboBoxItem  Content="План"/>
                 <ComboBoxItem Content="Факт"/>

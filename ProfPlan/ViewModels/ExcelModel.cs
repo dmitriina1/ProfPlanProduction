@@ -111,6 +111,23 @@ namespace ProfPlan.ViewModels
             Budget = budget;
             Commercial = commercial;
         }
+
+        public double SumProperties()
+        {
+            return (Lectures ?? 0) +
+                       (Consultations ?? 0) +
+                       (Laboratory ?? 0) +
+                       (Practices ?? 0) +
+                       (Tests ?? 0) +
+                       (Exams ?? 0) +
+                       (CourseProjects ?? 0) +
+                       (CourseWorks ?? 0) +
+                       (Diploma ?? 0) +
+                       (RGZ ?? 0) +
+                       (GEKAndGAK ?? 0) +
+                       (ReviewDiploma ?? 0) +
+                       (Other ?? 0);
+        }
     }
 }
 

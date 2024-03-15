@@ -1,6 +1,7 @@
 ﻿using ProfPlan.ViewModels;
 using ProfPlan.ViewModels.Base;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -11,7 +12,7 @@ using System.Windows.Forms;
 
 namespace ProfPlan.Models
 {
-    internal class TableCollection : ViewModel
+    internal class TableCollection : ViewModel, IEnumerable
     {
         private string _tablename = null;
         private ObservableCollection<ExcelData> _excelData = new ObservableCollection<ExcelData>();
@@ -122,5 +123,16 @@ namespace ProfPlan.Models
                 }
             }
         }
+
+        public IEnumerator<ExcelData> GetEnumerator()
+        {
+            return _excelData.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
     }
 }

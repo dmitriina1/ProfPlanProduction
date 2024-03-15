@@ -15,8 +15,21 @@ namespace ProfPlan.ViewModels
 {
     internal class TeachersWindowViewModel : ViewModel
     {
-        public ObservableCollection<Teacher> Teachers { get; set; } = TeachersManager.GetTeachers();
+        private ObservableCollection<Teacher> _teachers;
+        public ObservableCollection<Teacher> Teachers
+        {
+            get { return _teachers; }
+            set
+            {
+                _teachers = value;
+                OnPropertyChanged(nameof(Teachers));
+            }
+        }
 
+        public TeachersWindowViewModel()
+        {
+            Teachers = TeachersManager.GetTeachers();
+        }
 
         private RelayCommand _showAddTeacherWindowCommand;
         public ICommand ShowAddTeacherWindowCommand
@@ -50,7 +63,9 @@ namespace ProfPlan.ViewModels
             if (MessageBox.Show($"Вы уверены, что хотите удалить пользователя {teacher.LastName} {teacher.FirstName} {teacher.MiddleName}?", "Удаление пользователя", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 // Удаление пользователя из коллекции и обновление представления
-                Teachers.Remove(teacher);
+                //Teachers.Remove(teacher);
+                TeachersManager.RemoveTeacher(teacher);
+                Teachers = TeachersManager.GetTeachers();
             }
         }
     }
