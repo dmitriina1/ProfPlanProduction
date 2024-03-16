@@ -708,7 +708,7 @@ namespace ProfPlan.ViewModels
         private void CreateLoadCalcReport(object obj)
         {
             ReportViewModel loadCalcVM = new ReportViewModel();
-            loadCalcVM.SumAllTeachersTables();
+            loadCalcVM.SumAllTeachersTables(SelectedComboBoxIndex);
         }
     }
 }
