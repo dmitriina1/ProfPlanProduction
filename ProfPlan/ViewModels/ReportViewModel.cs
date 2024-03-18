@@ -5,6 +5,7 @@ using ProfPlan.ViewModels.Base;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,19 +19,6 @@ namespace ProfPlan.ViewModels
     {
         public ObservableCollection<TableCollection> TablesCollectionTeacherSum { get; set; }
 
-        //private int? _orientation = 0;
-        //public int? Orientation
-        //{
-        //    get { return _orientation; }
-        //    set
-        //    {
-        //        if (_orientation != value)
-        //        {
-        //            _orientation = value;
-        //            OnPropertyChanged(nameof(Orientation));
-        //        }
-        //    }
-        //}
         public void SumAllTeachersTables(int index)
         {
             TablesCollectionTeacherSum = new ObservableCollection<TableCollection>();
@@ -352,7 +340,7 @@ namespace ProfPlan.ViewModels
 
         private string directoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"Бланк нагрузки {DateTime.Today:dd-MM-yyyy}");
 
-        public void SaveToExcel(ObservableCollection<TableCollection> tablesCollection)
+        private string GetSaveFilePath()
         {
             System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             saveFileDialog.Filter = "Excel files (*.xlsx)|*.xlsx|All files (*.*)|*.*";
@@ -360,21 +348,54 @@ namespace ProfPlan.ViewModels
             saveFileDialog.FileName = $"Бланк_Нагрузки {DateTime.Today:dd-MM-yyyy}.xlsx";
 
             System.Windows.Forms.DialogResult result = saveFileDialog.ShowDialog();
-
             if (result == System.Windows.Forms.DialogResult.OK)
+                return saveFileDialog.FileName;
+
+            return null;
+        }
+
+        private string CreateTeachersNameForForm(string teacherName)
+        {
+            if (teacherName.StartsWith("П_") || teacherName.StartsWith("Ф_"))
             {
-                directoryPath = saveFileDialog.FileName;
+                teacherName = teacherName.Substring(2);
             }
-            else
+            foreach (var teach in TeachersManager.GetTeachers())
             {
+                if (Regex.Replace(teacherName.Trim(), @"\s+", " ").Split(' ')[0] == Regex.Replace(teach.LastName.Trim(), @"\s+", " "))
+                {
+                    if (Regex.Replace(teacherName.Trim(), @"\s+", " ").Split(' ').Length > 1)
+                    {
+                        teacherName = teach.LastName + "\n" + teach.FirstName + "\n" + teach.MiddleName + "\n" + teach.AcademicDegree + " " +
+                        teach.Position +"\n" + (Regex.Replace(teacherName.Trim(), @"\s+", " ").Split(' ').Length > 1 ? Regex.Replace(teacherName.Trim(), @"\s+", " ").Split(' ')[1] : "") + " ставки";
+                    }
+                    else if (teach.AcademicDegree!="" && teach.Position!="")
+                    {
+                        teacherName = teach.LastName + "\n" + teach.FirstName + "\n" + teach.MiddleName + "\n" + teach.AcademicDegree + " " + teach.Position;
+
+                    }
+                    else
+                    {
+                        teacherName = teach.LastName + "\n" + teach.FirstName + "\n" + teach.MiddleName;
+
+                    }
+
+                }
+            }
+            return teacherName;
+        }
+
+        public void SaveToExcel(ObservableCollection<TableCollection> tablesCollection)
+        {
+            directoryPath = GetSaveFilePath();
+            if (string.IsNullOrEmpty(directoryPath))
                 return;
-            }
+
             using (var workbook = new XLWorkbook())
             {
                 var fworksheet = workbook.Worksheets.Add("Бланк нагрузки");
                 int frow = 3;
                 // Добавление заголовков
-
                 int columnNumber = 1;
 
                 fworksheet.Cell(frow, columnNumber++).Value = "Teacher";
@@ -391,41 +412,14 @@ namespace ProfPlan.ViewModels
                     }
                 }
 
-
                 fworksheet.Cell(3, columnNumber).Value = "TotalSemester";
 
                 // Заполнение данных - первые элементы
                 int rowNumber = 4;
                 foreach (var tableCollection in tablesCollection)
                 {
-                    string teacherName = tableCollection.Tablename;
-                    if (teacherName.StartsWith("П_") || teacherName.StartsWith("Ф_"))
-                    {
-                        teacherName = teacherName.Substring(2);
-                    }
-                    foreach(var teach in TeachersManager.GetTeachers())
-                    {
-                        if(Regex.Replace(teacherName.Trim(), @"\s+", " ").Split(' ')[0] == Regex.Replace(teach.LastName.Trim(), @"\s+", " "))
-                        {
-                            if(Regex.Replace(teacherName.Trim(), @"\s+", " ").Split(' ').Length > 1)
-                            {
-                                teacherName = teach.LastName + "\n" + teach.FirstName + "\n" + teach.MiddleName + "\n" + teach.AcademicDegree + " " +
-                                teach.Position +"\n" + (Regex.Replace(teacherName.Trim(), @"\s+", " ").Split(' ').Length > 1 ? Regex.Replace(teacherName.Trim(), @"\s+", " ").Split(' ')[1] : "") + " ставки";
-                            }
-                            else if(teach.AcademicDegree!=null && teach.Position!=null)
-                            {
-                                teacherName = teach.LastName + "\n" + teach.FirstName + "\n" + teach.MiddleName + "\n" + teach.AcademicDegree + " " + teach.Position;
-
-                            }
-                            else
-                            {
-                                teacherName = teach.LastName + "\n" + teach.FirstName + "\n" + teach.MiddleName;
-
-                            }
-
-                        }
-                    }
-
+                    string teacherName = CreateTeachersNameForForm(tableCollection.Tablename);
+                    
                     if (tableCollection.ExcelData.Count >= 1)
                     {
                         var excelModel = tableCollection.ExcelData[0];
@@ -439,7 +433,6 @@ namespace ProfPlan.ViewModels
                             var value = typeof(ExcelModel).GetProperty(propertyName)?.GetValue(excelModel, null);
                             fworksheet.Cell(rowNumber, columnNumber++).Value = value != null ? value.ToString() : "";
                         }
-
 
                         fworksheet.Cell(rowNumber, columnNumber).Value = totalSemester.ToString().Replace(",",".");
 
@@ -484,15 +477,88 @@ namespace ProfPlan.ViewModels
                         rowNumber++;
                     }
                 }
-                SwapColumns(fworksheet, 3, 5);
-                SwapColumns(fworksheet, 8, 9);
-                SwapColumns(fworksheet, 10, 11);
-                SwapColumns(fworksheet, 11, 12);
-                SwapColumns(fworksheet, 17, 19);
-                SwapColumns(fworksheet, 22, 23);
-                SwapColumns(fworksheet, 24, 25);
-                SwapColumns(fworksheet, 25, 26);
-                List<string> newPropertyNames = new List<string>
+                AdjustWorksheetLayout(fworksheet, frow, workbook);
+                // Сохранение в файл
+                workbook.SaveAs(directoryPath);
+            }
+        }
+        private void AdjustWorksheetLayout(IXLWorksheet fworksheet, int frow, XLWorkbook workbook)
+        {
+            SwapAndInsertColumns(fworksheet, frow);
+
+            // Задаем заголовок для нового столбца
+            fworksheet.Cell(frow, 42).Value = "ИТОГО ЗА ГОД";
+            // Заполняем значениями новый столбец на основе данных из других столбцов
+            for (int row = 4; row <= fworksheet.RowsUsed().Count()+2; row++)
+            {
+                var value21 = fworksheet.Cell(row, 21).Value.ToString().ToNullable<double>();
+                var value41 = fworksheet.Cell(row, 41).Value.ToString().ToNullable<double>();
+                fworksheet.Cell(row, 42).Value = (value21 + value41).ToString().Replace(",", ".");
+            }
+            frow = 1;
+            //sworksheet.Range(frow, 1, frow, 3).Merge();
+            fworksheet.Range(frow, 1, frow, 3).Merge();
+            fworksheet.Cell(frow, 1).Value = "Первое полугодие";
+            fworksheet.Range(frow, 22, frow, 27).Merge();
+            fworksheet.Cell(frow, 22).Value = "Второе полугодие";
+
+            fworksheet.Range(fworksheet.Cell(2, 8), fworksheet.Cell(2, 14)).Merge();
+            fworksheet.Cell(2, 8).Value = "Руководство";
+            fworksheet.Range(fworksheet.Cell(2, 28), fworksheet.Cell(2, 34)).Merge();
+            fworksheet.Cell(2, 28).Value = "Руководство";
+
+            List<string> newPropertyNames = GetPropertyNamesForColumns();
+
+            for (int col = 1; col <= 43; col++)
+            {
+                if ((col < 8 || col > 14) && (col < 28 || col > 34)) // Проверяем, что колонка не входит в диапазоны 8-14 и 28-34
+                {
+                    fworksheet.Range(fworksheet.Cell(2, col), fworksheet.Cell(3, col)).Merge();
+                }
+            }
+            for (int i = 1; i < newPropertyNames.Count; i++)
+            {
+                if (i<7 ||i>13)
+                {
+                    fworksheet.Cell(2, i + 1 + 20).Value = newPropertyNames[i];
+                    fworksheet.Cell(2, i + 1).Value = newPropertyNames[i];
+                }
+
+            }
+            SetStyleForWorksheet(fworksheet, workbook);
+        }
+        private void SetStyleForWorksheet(IXLWorksheet fworksheet, XLWorkbook workbook)
+        {
+            fworksheet.Cell(2, 42).Value = "ИТОГО ЗА ГОД";
+
+            var styleArial6 = workbook.Style;
+            styleArial6.Alignment.TextRotation = 90;
+            styleArial6.Alignment.WrapText = true;
+            for (int row = 2; row <= fworksheet.RowsUsed().Count()+1; row++)
+            {
+                for (int col = 2; col <= fworksheet.ColumnsUsed().Count(); col++)
+                {
+                    fworksheet.Cell(row, col).Style = styleArial6;
+                    if (double.TryParse(fworksheet.Cell(row, col).Value.ToString(), out double number))
+                    {
+                        // Проверяем, имеет ли число дробную часть
+                        if (number != Math.Floor(number))
+                        {
+                            // Если число не является целым, устанавливаем явный формат
+                            fworksheet.Cell(row, col).Style.NumberFormat.Format = "0.##";
+                        }
+                    }
+                }
+            }
+            fworksheet.Column(1).Style.Alignment.WrapText = true;
+            fworksheet.Cell(2, 8).Style = workbook.Style.Alignment.SetTextRotation(0);
+            fworksheet.Cell(2, 28).Style = workbook.Style.Alignment.SetTextRotation(0);
+            fworksheet.Columns().AdjustToContents();
+            fworksheet.Rows(2, 3).AdjustToContents();
+        }
+        private List<string> GetPropertyNamesForColumns()
+        {
+           return new List<string>
                 {
                     "Преподаватель", "Чтение лекций", "Консультации", "Лабораторные работы",
                     "Практические занятия", "Зачеты", "Экзамены", "Курсовыми проектами",
@@ -501,93 +567,37 @@ namespace ProfPlan.ViewModels
                     "Рецензирование контр. Работ заочников", "ГЭК",
                     "Проверка контрольных работ", "Другие виды работ", "ИТОГО ЗА СЕМЕСТР"
                 };
-                fworksheet.Column(11).InsertColumnsBefore(4);
-                fworksheet.Column(16).InsertColumnsBefore(2);
-                fworksheet.Column(31).InsertColumnsBefore(4);
-                fworksheet.Column(36).InsertColumnsBefore(2);
-
-                fworksheet.Cell(frow, 1).Value="";
-                for (int i = 1; i < newPropertyNames.Count; i++)
-                {
-                    fworksheet.Cell(frow, i + 1 + 20).Value = newPropertyNames[i];
-                    fworksheet.Cell(frow, i + 1).Value = newPropertyNames[i];
-                }
-                if (fworksheet.Column(42) == null)
-                {
-                    fworksheet.Column(41).InsertColumnsAfter(1);
-                }
-
-                // Задаем заголовок для нового столбца
-                fworksheet.Cell(frow, 42).Value = "ИТОГО ЗА ГОД";
-                // Заполняем значениями новый столбец на основе данных из других столбцов
-                for (int row = 4; row <= fworksheet.RowsUsed().Count()+2; row++)
-                {
-                    var value21 = fworksheet.Cell(row, 21).Value.ToString().ToNullable<double>();
-                    var value41 = fworksheet.Cell(row, 41).Value.ToString().ToNullable<double>();
-                    fworksheet.Cell(row, 42).Value = (value21 + value41).ToString().Replace(",",".");
-                }
-                frow = 1;
-                //sworksheet.Range(frow, 1, frow, 3).Merge();
-                fworksheet.Range(frow, 1, frow, 3).Merge();
-                fworksheet.Cell(frow, 1).Value = "Первое полугодие";
-                fworksheet.Range(frow, 22, frow, 27).Merge();
-                fworksheet.Cell(frow, 22).Value = "Второе полугодие";
-
-                fworksheet.Range(fworksheet.Cell(2, 8), fworksheet.Cell(2, 14)).Merge();
-                fworksheet.Cell(2, 8).Value = "Руководство";
-                fworksheet.Range(fworksheet.Cell(2, 28), fworksheet.Cell(2, 34)).Merge();
-                fworksheet.Cell(2, 28).Value = "Руководство";
-
-                for (int col = 1; col <= 43; col++)
-                {
-                    if ((col < 8 || col > 14) && (col < 28 || col > 34)) // Проверяем, что колонка не входит в диапазоны 8-14 и 28-34
-                    {
-                          fworksheet.Range(fworksheet.Cell(2, col), fworksheet.Cell(3, col)).Merge();
-                    }
-                }
-                for (int i = 1; i < newPropertyNames.Count; i++)
-                {
-                    if(i<7 ||i>13)
-                    {
-                        fworksheet.Cell(2, i + 1 + 20).Value = newPropertyNames[i];
-                        fworksheet.Cell(2, i + 1).Value = newPropertyNames[i];
-                    }
-                    
-                }
-                fworksheet.Cell(2, 42).Value = "ИТОГО ЗА ГОД";
-
-                var styleArial6 = workbook.Style;
-                styleArial6.Alignment.TextRotation = 90;
-                styleArial6.Alignment.WrapText = true;
-                for (int row = 2; row <= fworksheet.RowsUsed().Count()+1; row++)
-                {
-                    for (int col = 2; col <= fworksheet.ColumnsUsed().Count(); col++)
-                    {
-                        fworksheet.Cell(row, col).Style = styleArial6;
-                        if (double.TryParse(fworksheet.Cell(row, col).Value.ToString(), out double number))
-                        {
-                            // Проверяем, имеет ли число дробную часть
-                            if (number != Math.Floor(number))
-                            {
-                                // Если число не является целым, устанавливаем явный формат
-                                fworksheet.Cell(row, col).Style.NumberFormat.Format = "0.##";
-                            }
-                        }
-                    }
-                }
-                fworksheet.Column(1).Style.Alignment.WrapText = true;
-                fworksheet.Cell(2, 8).Style = workbook.Style.Alignment.SetTextRotation(0);
-                fworksheet.Cell(2, 28).Style = workbook.Style.Alignment.SetTextRotation(0);
-                fworksheet.Columns().AdjustToContents();
-                fworksheet.Rows(2, 3).AdjustToContents();
-                
-
-
-                // Сохранение в файл
-                workbook.SaveAs(directoryPath);
-            }
         }
 
+        private void SwapAndInsertColumns(IXLWorksheet fworksheet, int frow)
+        {
+            SwapColumns(fworksheet, 3, 5);
+            SwapColumns(fworksheet, 8, 9);
+            SwapColumns(fworksheet, 10, 11);
+            SwapColumns(fworksheet, 11, 12);
+            SwapColumns(fworksheet, 17, 19);
+            SwapColumns(fworksheet, 22, 23);
+            SwapColumns(fworksheet, 24, 25);
+            SwapColumns(fworksheet, 25, 26);
+           
+            fworksheet.Column(11).InsertColumnsBefore(4);
+            fworksheet.Column(16).InsertColumnsBefore(2);
+            fworksheet.Column(31).InsertColumnsBefore(4);
+            fworksheet.Column(36).InsertColumnsBefore(2);
+            List<string> newPropertyNames = GetPropertyNamesForColumns();
+
+
+            fworksheet.Cell(frow, 1).Value="";
+            for (int i = 1; i < newPropertyNames.Count; i++)
+            {
+                fworksheet.Cell(frow, i + 1 + 20).Value = newPropertyNames[i];
+                fworksheet.Cell(frow, i + 1).Value = newPropertyNames[i];
+            }
+            if (fworksheet.Column(42) == null)
+            {
+                fworksheet.Column(41).InsertColumnsAfter(1);
+            }
+        }
         public static void SwapColumns(IXLWorksheet worksheet, int column1Index, int column2Index)
         {
             int startRow = worksheet.FirstRowUsed().RowNumber();
