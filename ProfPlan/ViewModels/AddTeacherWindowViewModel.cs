@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Drawing;
 
 namespace ProfPlan.ViewModels
 {
@@ -31,7 +32,7 @@ namespace ProfPlan.ViewModels
         private void AddTeacher(object obj)
         {
             Teacher checkUser = TeachersManager.GetTeacherByName(Lastname, Firstname, Middlename);
-            if (existingUser == null && CanAdd == true && checkUser == null)
+            if (CanAdd == true && checkUser == null)
             {
                 double? doubleValue;
                 try

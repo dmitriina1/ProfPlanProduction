@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using ProfPlan.Models;
 using ProfPlan.ViewModels.Base;
 using System;
@@ -7,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -50,13 +52,15 @@ namespace ProfPlan.ViewModels
                         {
                             prefix = "Ф_";
                         }
-                    foreach (var tableCol in TablesCollections.GetTablesCollection())
+
+                    var tablesCollection = index == 0 ? TablesCollections.GetTablesCollectionWithP() : TablesCollections.GetTablesCollectionWithF();
+
+                    foreach (var tableCol in tablesCollection)
                     {
                         if (tableCol.Tablename.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) != -1)
                         {
                             foreach (ExcelTotal exRow in tableCol)
                             {
-
                                 if (prefix + exRow.Teacher == tableCollection.Tablename)
                                 {
                                     bet = exRow.Bet;
@@ -102,10 +106,11 @@ namespace ProfPlan.ViewModels
                                 }
                                 else
                                 {
-                                    DeleteItemsFromObsCol(sumOddList, sumOddListOneBet.ExcelData.Count-1);
                                     break;
                                 }
                             }
+                            DeleteItemsFromObsCol(sumOddList, sumOddListOneBet.ExcelData.Count-1);
+
                             sum = 0;
                             foreach (ExcelModel excelModel in sumEvenList)
                             {
@@ -116,10 +121,11 @@ namespace ProfPlan.ViewModels
                                 }
                                 else
                                 {
-                                    DeleteItemsFromObsCol(sumEvenList, sumEvenListOneBet.ExcelData.Count-1);
                                     break;
                                 }
                             }
+
+                            DeleteItemsFromObsCol(sumEvenList, sumEvenListOneBet.ExcelData.Count-1);
                             ExcelModel sumOddOneBet = CalculateSum(sumOddListOneBet, "нечет");
                             ExcelModel sumEvenOneBet = CalculateSum(sumEvenListOneBet, "чет");
                             sumTableCollection.ExcelData.Add(sumOddOneBet);
@@ -151,10 +157,10 @@ namespace ProfPlan.ViewModels
                                     }
                                     else
                                     {
-                                        DeleteItemsFromObsCol(sumOddList, sumOddListOneBet.ExcelData.Count-1);
                                         break;
                                     }
                                 }
+                                DeleteItemsFromObsCol(sumOddList, sumOddListOneBet.ExcelData.Count-1);
                                 sum = 0;
                                 foreach (ExcelModel excelModel in sumOddList)
                                 {
@@ -165,11 +171,11 @@ namespace ProfPlan.ViewModels
                                     }
                                     else
                                     {
-                                        DeleteItemsFromObsCol(sumOddList, sumOddListTwoBet.ExcelData.Count-1);
                                         break;
                                     }
+                                    
                                 }
-
+                                DeleteItemsFromObsCol(sumOddList, sumOddListTwoBet.ExcelData.Count-1);
                                 sum = 0;
                                 foreach (ExcelModel excelModel in sumEvenList)
                                 {
@@ -180,10 +186,11 @@ namespace ProfPlan.ViewModels
                                     }
                                     else
                                     {
-                                        DeleteItemsFromObsCol(sumEvenList, sumEvenListOneBet.ExcelData.Count-1);
                                         break;
                                     }
                                 }
+                                DeleteItemsFromObsCol(sumEvenList, sumEvenListOneBet.ExcelData.Count-1);
+
                                 sum = 0;
                                 foreach (ExcelModel excelModel in sumEvenList)
                                 {
@@ -194,10 +201,11 @@ namespace ProfPlan.ViewModels
                                     }
                                     else
                                     {
-                                        DeleteItemsFromObsCol(sumEvenList, sumEvenListTwoBet.ExcelData.Count-1);
                                         break;
                                     }
                                 }
+                                DeleteItemsFromObsCol(sumEvenList, sumEvenListTwoBet.ExcelData.Count-1);
+
                                 ExcelModel sumOddOneBet = CalculateSum(sumOddListOneBet, "нечет");
                                 ExcelModel sumOddTwoBet = CalculateSum(sumOddListTwoBet, "нечет");
                                 ExcelModel sumEvenOneBet = CalculateSum(sumEvenListOneBet, "чет");
@@ -363,7 +371,7 @@ namespace ProfPlan.ViewModels
             }
             using (var workbook = new XLWorkbook())
             {
-                var fworksheet = workbook.Worksheets.Add("Первое полугодие");
+                var fworksheet = workbook.Worksheets.Add("Бланк нагрузки");
                 int frow = 3;
                 // Добавление заголовков
 
@@ -391,6 +399,32 @@ namespace ProfPlan.ViewModels
                 foreach (var tableCollection in tablesCollection)
                 {
                     string teacherName = tableCollection.Tablename;
+                    if (teacherName.StartsWith("П_") || teacherName.StartsWith("Ф_"))
+                    {
+                        teacherName = teacherName.Substring(2);
+                    }
+                    foreach(var teach in TeachersManager.GetTeachers())
+                    {
+                        if(Regex.Replace(teacherName.Trim(), @"\s+", " ").Split(' ')[0] == Regex.Replace(teach.LastName.Trim(), @"\s+", " "))
+                        {
+                            if(Regex.Replace(teacherName.Trim(), @"\s+", " ").Split(' ').Length > 1)
+                            {
+                                teacherName = teach.LastName + "\n" + teach.FirstName + "\n" + teach.MiddleName + "\n" + teach.AcademicDegree + " " +
+                                teach.Position +"\n" + (Regex.Replace(teacherName.Trim(), @"\s+", " ").Split(' ').Length > 1 ? Regex.Replace(teacherName.Trim(), @"\s+", " ").Split(' ')[1] : "") + " ставки";
+                            }
+                            else if(teach.AcademicDegree!=null && teach.Position!=null)
+                            {
+                                teacherName = teach.LastName + "\n" + teach.FirstName + "\n" + teach.MiddleName + "\n" + teach.AcademicDegree + " " + teach.Position;
+
+                            }
+                            else
+                            {
+                                teacherName = teach.LastName + "\n" + teach.FirstName + "\n" + teach.MiddleName;
+
+                            }
+
+                        }
+                    }
 
                     if (tableCollection.ExcelData.Count >= 1)
                     {
@@ -413,8 +447,6 @@ namespace ProfPlan.ViewModels
                     }
                 }
 
-                //rowNumber += 6;
-                //var sworksheet = workbook.Worksheets.Add("Второе полугодие");
                 //// Дублирую колонки
                 int headerRow = 3;
                
@@ -431,7 +463,6 @@ namespace ProfPlan.ViewModels
                 // Заполнение данных - вторые элементы
                 foreach (var tableCollection in tablesCollection)
                 {
-                    string teacherName = tableCollection.Tablename;
 
                     if (tableCollection.ExcelData.Count == 2)
                     {
@@ -475,13 +506,6 @@ namespace ProfPlan.ViewModels
                 fworksheet.Column(31).InsertColumnsBefore(4);
                 fworksheet.Column(36).InsertColumnsBefore(2);
 
-                //for (int i = 8; i<fworksheet.ColumnsUsed().Count()+1; i++)
-                //{
-                //    fworksheet.Range(fworksheet.Cell(2, i), fworksheet.Cell(3, i)).Merge();
-                //}
-                
-                //fworksheet.Range(fworksheet.Cell(2, 2), fworksheet.Cell(3, 2)).Merge();
-                //fworksheet.Range(fworksheet.Cell(2, 3), fworksheet.Cell(3, 3)).Merge();
                 fworksheet.Cell(frow, 1).Value="";
                 for (int i = 1; i < newPropertyNames.Count; i++)
                 {
@@ -551,12 +575,13 @@ namespace ProfPlan.ViewModels
                         }
                     }
                 }
+                fworksheet.Column(1).Style.Alignment.WrapText = true;
                 fworksheet.Cell(2, 8).Style = workbook.Style.Alignment.SetTextRotation(0);
                 fworksheet.Cell(2, 28).Style = workbook.Style.Alignment.SetTextRotation(0);
                 fworksheet.Columns().AdjustToContents();
                 fworksheet.Rows(2, 3).AdjustToContents();
                 
-                
+
 
                 // Сохранение в файл
                 workbook.SaveAs(directoryPath);

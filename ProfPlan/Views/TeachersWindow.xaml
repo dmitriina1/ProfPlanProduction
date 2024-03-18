@@ -16,8 +16,8 @@
                         <GridViewColumn DisplayMemberBinding="{Binding LastName}" Header="Фамилия"/>
                         <GridViewColumn DisplayMemberBinding="{Binding FirstName}" Header="Имя"/>
                         <GridViewColumn DisplayMemberBinding="{Binding MiddleName}" Header="Отчество"/>
-                        <GridViewColumn DisplayMemberBinding="{Binding Position}" Header="Должность"/>
                         <GridViewColumn DisplayMemberBinding="{Binding AcademicDegree}" Header="Учетная степень"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding Position}" Header="Ученое звание"/>
                         <GridViewColumn DisplayMemberBinding="{Binding Workload}" Header="Размер ставки"/>
                     </GridView>
                 </ListView.View>

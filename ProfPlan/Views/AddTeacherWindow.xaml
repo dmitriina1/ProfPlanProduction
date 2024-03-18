@@ -26,11 +26,11 @@
         <Label Grid.Row="2" Content="Отчество" Margin="25,0" VerticalAlignment="Top" HorizontalAlignment="left"/>
         <TextBox Grid.Row="2" Height="30" Text="{Binding Middlename, TargetNullValue=''}" Width="200" Margin="25,20,25,0" VerticalAlignment="Top" HorizontalAlignment="left" BorderThickness="1" BorderBrush="#E0E0E0" />
 
-        <Label Grid.Row="3" Content="Должность" Margin="25,0" VerticalAlignment="Top" HorizontalAlignment="left"/>
-        <TextBox Grid.Row="3" Height="30" Text="{Binding Position, TargetNullValue=''}" Width="200" Margin="25,20,25,0" VerticalAlignment="Top" HorizontalAlignment="left" BorderThickness="1" BorderBrush="#E0E0E0" />
+        <Label Grid.Row="3" Content="Учетная степень" Margin="25,0" VerticalAlignment="Top" HorizontalAlignment="left"/>
+        <TextBox Grid.Row="3" Height="30" Text="{Binding AcademicDegree, TargetNullValue=''}" Width="200" Margin="25,20,25,0" VerticalAlignment="Top" HorizontalAlignment="left" BorderThickness="1" BorderBrush="#E0E0E0" />
 
-        <Label Grid.Row="4" Content="Учетная степень" Margin="25,0" VerticalAlignment="Top" HorizontalAlignment="left"/>
-        <TextBox Grid.Row="4" Height="30" Text="{Binding AcademicDegree, TargetNullValue=''}" Width="200" Margin="25,20,25,0" VerticalAlignment="Top" HorizontalAlignment="left" BorderThickness="1" BorderBrush="#E0E0E0" />
+        <Label Grid.Row="4" Content="Ученое звание" Margin="25,0" VerticalAlignment="Top" HorizontalAlignment="left"/>
+        <TextBox Grid.Row="4" Height="30" Text="{Binding Position, TargetNullValue=''}" Width="200" Margin="25,20,25,0" VerticalAlignment="Top" HorizontalAlignment="left" BorderThickness="1" BorderBrush="#E0E0E0" />
 
         <Label Grid.Row="5" Content="Размер ставки" Margin="25,0" VerticalAlignment="Top" HorizontalAlignment="left"/>
         <TextBox Grid.Row="5" Height="30" Text="{Binding Workload, TargetNullValue=''}" Width="200" Margin="25,20,25,0" VerticalAlignment="Top" HorizontalAlignment="left" BorderThickness="1" BorderBrush="#E0E0E0" />

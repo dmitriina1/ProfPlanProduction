@@ -33,6 +33,7 @@ namespace ProfPlan.Models
             var teacherDatabase = new TeacherDatabase();
             teacherDatabase.SaveTeachers(_DatabaseUsers);
             ExcelModel.UpdateSharedTeachers();
+            OnTeachersChanged();
         }
         public static Teacher GetTeacherByName(string lastname, string firstname, string middlename)
         {
@@ -48,6 +49,7 @@ namespace ProfPlan.Models
             var teacherDatabase = new TeacherDatabase();
             teacherDatabase.SaveTeachers(_DatabaseUsers);
             ExcelModel.UpdateSharedTeachers();
+            OnTeachersChanged();
         }
         public static void RemoveTeacher(Teacher teacher)
         {
@@ -55,6 +57,14 @@ namespace ProfPlan.Models
             var teacherDatabase = new TeacherDatabase();
             teacherDatabase.SaveTeachers(_DatabaseUsers);
             ExcelModel.UpdateSharedTeachers();
+            OnTeachersChanged();
+        }
+
+        public static event EventHandler TeachersChanged;
+
+        private static void OnTeachersChanged()
+        {
+            TeachersChanged?.Invoke(null, EventArgs.Empty);
         }
     }
 }

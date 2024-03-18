@@ -29,6 +29,11 @@ namespace ProfPlan.ViewModels
         public TeachersWindowViewModel()
         {
             Teachers = TeachersManager.GetTeachers();
+            TeachersManager.TeachersChanged += (sender, e) =>
+            {
+                // Обновляем список учителей при изменении
+                Teachers = TeachersManager.GetTeachers();
+            };
         }
 
         private RelayCommand _showAddTeacherWindowCommand;
@@ -68,5 +73,7 @@ namespace ProfPlan.ViewModels
                 Teachers = TeachersManager.GetTeachers();
             }
         }
+
+
     }
 }
