@@ -475,11 +475,11 @@ namespace ProfPlan.ViewModels
                 fworksheet.Column(31).InsertColumnsBefore(4);
                 fworksheet.Column(36).InsertColumnsBefore(2);
 
-                //for(int i = 1; i<fworksheet.ColumnsUsed().Count()+1; i++)
+                //for (int i = 8; i<fworksheet.ColumnsUsed().Count()+1; i++)
                 //{
                 //    fworksheet.Range(fworksheet.Cell(2, i), fworksheet.Cell(3, i)).Merge();
                 //}
-                //fworksheet.Range(fworksheet.Cell(2, 1), fworksheet.Cell(3, 1)).Merge();
+                
                 //fworksheet.Range(fworksheet.Cell(2, 2), fworksheet.Cell(3, 2)).Merge();
                 //fworksheet.Range(fworksheet.Cell(2, 3), fworksheet.Cell(3, 3)).Merge();
                 fworksheet.Cell(frow, 1).Value="";
@@ -509,10 +509,33 @@ namespace ProfPlan.ViewModels
                 fworksheet.Range(frow, 22, frow, 27).Merge();
                 fworksheet.Cell(frow, 22).Value = "Второе полугодие";
 
+                fworksheet.Range(fworksheet.Cell(2, 8), fworksheet.Cell(2, 14)).Merge();
+                fworksheet.Cell(2, 8).Value = "Руководство";
+                fworksheet.Range(fworksheet.Cell(2, 28), fworksheet.Cell(2, 34)).Merge();
+                fworksheet.Cell(2, 28).Value = "Руководство";
+
+                for (int col = 1; col <= 43; col++)
+                {
+                    if ((col < 8 || col > 14) && (col < 28 || col > 34)) // Проверяем, что колонка не входит в диапазоны 8-14 и 28-34
+                    {
+                          fworksheet.Range(fworksheet.Cell(2, col), fworksheet.Cell(3, col)).Merge();
+                    }
+                }
+                for (int i = 1; i < newPropertyNames.Count; i++)
+                {
+                    if(i<7 ||i>13)
+                    {
+                        fworksheet.Cell(2, i + 1 + 20).Value = newPropertyNames[i];
+                        fworksheet.Cell(2, i + 1).Value = newPropertyNames[i];
+                    }
+                    
+                }
+                fworksheet.Cell(2, 42).Value = "ИТОГО ЗА ГОД";
 
                 var styleArial6 = workbook.Style;
                 styleArial6.Alignment.TextRotation = 90;
-                for (int row = 3; row <= fworksheet.RowsUsed().Count()+1; row++)
+                styleArial6.Alignment.WrapText = true;
+                for (int row = 2; row <= fworksheet.RowsUsed().Count()+1; row++)
                 {
                     for (int col = 2; col <= fworksheet.ColumnsUsed().Count(); col++)
                     {
@@ -528,9 +551,12 @@ namespace ProfPlan.ViewModels
                         }
                     }
                 }
-               
+                fworksheet.Cell(2, 8).Style = workbook.Style.Alignment.SetTextRotation(0);
+                fworksheet.Cell(2, 28).Style = workbook.Style.Alignment.SetTextRotation(0);
                 fworksheet.Columns().AdjustToContents();
-                fworksheet.Rows(2,3).AdjustToContents();
+                fworksheet.Rows(2, 3).AdjustToContents();
+                
+                
 
                 // Сохранение в файл
                 workbook.SaveAs(directoryPath);
