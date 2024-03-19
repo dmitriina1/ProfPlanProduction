@@ -416,6 +416,7 @@ namespace ProfPlan.ViewModels
                         for (int i = 0; i < newPropertyNames.Count; i++)
                         {
                             worksheet.Cell(frow, i + 1).Value = newPropertyNames[i];
+                            worksheet.Cell(frow, i + 1).Style.Alignment.SetTextRotation(90);
                         }
                     }
                     else
@@ -426,6 +427,15 @@ namespace ProfPlan.ViewModels
                         }
                     }
                 }
+                foreach (var worksheet in workbook.Worksheets)
+                {
+                    if (worksheet.Name.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) == -1)
+                    {
+                        worksheet.Rows().AdjustToContents();
+                    }
+                }
+                    
+
                 SaveWorkbook(workbook);
             }
         }
@@ -502,9 +512,9 @@ namespace ProfPlan.ViewModels
             {
                 SaveToExcelAs();
             }
-            else if (filePath != "")
+            else if (directoryPath != "")
             {
-                workbook.SaveAs(filePath);
+                workbook.SaveAs(directoryPath);
             }
             else
             {
@@ -708,7 +718,20 @@ namespace ProfPlan.ViewModels
         private void CreateLoadCalcReport(object obj)
         {
             ReportViewModel loadCalcVM = new ReportViewModel();
-            loadCalcVM.SumAllTeachersTables(SelectedComboBoxIndex);
+            loadCalcVM.CreateLoadCalc(SelectedComboBoxIndex);
+        }
+
+
+        private RelayCommand _individualPlanReport;
+        public ICommand LoadIndividualPlanReport
+        {
+            get { return _individualPlanReport ?? (_individualPlanReport = new RelayCommand(CreateIndividualPlanReport)); }
+        }
+
+        private void CreateIndividualPlanReport(object obj)
+        {
+            ReportViewModel loadCalcVM = new ReportViewModel();
+            loadCalcVM.CreateIndividualPlan(SelectedComboBoxIndex);
         }
     }
 }

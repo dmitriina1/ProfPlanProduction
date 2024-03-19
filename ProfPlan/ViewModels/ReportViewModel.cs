@@ -18,10 +18,21 @@ namespace ProfPlan.ViewModels
     internal class ReportViewModel : ViewModel
     {
         public ObservableCollection<TableCollection> TablesCollectionTeacherSum { get; set; }
+        private ObservableCollection<TableCollection> TablesCollectionTeacherSumList { get; set; }
+        private bool wasCalc = false;
 
-        public void SumAllTeachersTables(int index)
+        public void CreateLoadCalc(int index)
+        {
+            SumAllTeachersTables(index);
+            wasCalc = true;
+            SaveToExcel(TablesCollectionTeacherSum);
+        }
+        private void SumAllTeachersTables(int index)
         {
             TablesCollectionTeacherSum = new ObservableCollection<TableCollection>();
+
+            TablesCollectionTeacherSumList = new ObservableCollection<TableCollection>();
+
             foreach (var tableCollection in TablesCollections.GetTablesCollection())
             {
                 if (tableCollection.Tablename.IndexOf("ПИиИС", StringComparison.OrdinalIgnoreCase) == -1 && tableCollection.Tablename.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) == -1 && tableCollection.Tablename.IndexOf("Незаполненные", StringComparison.OrdinalIgnoreCase) == -1 && tableCollection.Tablename.IndexOf("Доп", StringComparison.OrdinalIgnoreCase) == -1)
@@ -56,8 +67,10 @@ namespace ProfPlan.ViewModels
                                     totalHours = exRow.TotalHours;
                                     autumnHours = exRow.AutumnHours;
                                     springHours = exRow.SpringHours;
+                                    break;
                                 }
                             }
+                            break;
                         }
                     }
                     TableCollection sumTableCollection;
@@ -69,7 +82,6 @@ namespace ProfPlan.ViewModels
                     ExcelModel sumEven = CalculateSum(tableCollection, "чет");
                     ObservableCollection<ExcelModel> sumEvenList = TotalSemesterCalculation(tableCollection, "чет");
 
-                    double sum;
                     double? autumnIndex = autumnHours/totalHours;
                     double? springIndex = springHours/totalHours;
 
@@ -79,7 +91,7 @@ namespace ProfPlan.ViewModels
                         
                         if (bet!=null)
                         {
-                            ProcessBet(sumTableCollection, sumOddList, sumEvenList, bet, betPercent);
+                            ProcessBet(sumTableCollection, sumOddList, sumEvenList, bet, betPercent, autumnIndex, springIndex);
                             TablesCollectionTeacherSum.Add(sumTableCollection);
                         }
                        
@@ -109,13 +121,13 @@ namespace ProfPlan.ViewModels
                             }
                         }
                         
-                    }
-                    
+                    }                    
 
 
                 }
+
             }
-            SaveToExcel(TablesCollectionTeacherSum);
+            
         }
 
 
@@ -123,12 +135,14 @@ namespace ProfPlan.ViewModels
         {
             TableCollection sumOddListOneBet = new TableCollection();
             TableCollection sumEvenListOneBet = new TableCollection();
-            double? sum = 0, betValue = bet;
-            if (betPercent>1)
-            {
-                betValue = bet * autumnIndex;
-            }
-            else if (betPercent<1)
+
+            TableCollection ListForIPPlan = new TableCollection($"{sumTableCollection.Tablename}");
+
+            double? sum = 0, betValue, min = null, dif;
+            
+            betValue = bet * autumnIndex;
+            
+            if (betPercent<1)
             {
                 betValue = bet * autumnIndex * betPercent;
             }
@@ -136,9 +150,25 @@ namespace ProfPlan.ViewModels
             {
                 if (betValue>sum)
                 {
-                    sum+=excelModel.SumProperties();
-                    sumOddListOneBet.ExcelData.Add(excelModel);
-
+                    dif=betValue - sum;
+                    if (dif > excelModel.SumProperties())
+                    {
+                        sum+=excelModel.SumProperties();
+                        sumOddListOneBet.ExcelData.Add(excelModel);
+                        ListForIPPlan.ExcelData.Add(excelModel);
+                    }
+                    else if(min>excelModel.SumProperties() && sumOddList.IndexOf(excelModel) != sumOddList.Count - 1)
+                    {
+                        min = excelModel.SumProperties();
+                    }
+                    else if(sumOddList.IndexOf(excelModel) == sumOddList.Count - 1)
+                    {
+                        if (min == null)
+                            min = 0;
+                        sum+=min;
+                        sumOddListOneBet.ExcelData.Add(excelModel);
+                        ListForIPPlan.ExcelData.Add(excelModel);
+                    }
                 }
                 else
                 {
@@ -146,22 +176,37 @@ namespace ProfPlan.ViewModels
                 }
             }
             DeleteItemsFromObsCol(sumOddList, sumOddListOneBet.ExcelData.Count-1);
-            betValue = bet;
+            
             sum = 0;
-            if (betPercent>1)
-            {
-                betValue = bet * springIndex;
-            }
-            else if (betPercent<1)
+            min = null;
+            betValue = bet * springIndex;
+            if (betPercent<1)
             {
                 betValue = bet * springIndex * betPercent;
             }
             foreach (ExcelModel excelModel in sumEvenList)
             {
-                if (betValue > sum)
+                if (betValue>sum)
                 {
-                    sum += excelModel.SumProperties();
-                    sumEvenListOneBet.ExcelData.Add(excelModel);
+                    dif=betValue - sum;
+                    if (dif > excelModel.SumProperties())
+                    {
+                        sum += excelModel.SumProperties();
+                        sumEvenListOneBet.ExcelData.Add(excelModel);
+                        ListForIPPlan.ExcelData.Add(excelModel);
+                    }
+                    else if (min>excelModel.SumProperties() && sumOddList.IndexOf(excelModel) != sumOddList.Count - 1)
+                    {
+                        min = excelModel.SumProperties();
+                    }
+                    else if (sumEvenList.IndexOf(excelModel) == sumEvenList.Count - 1)
+                    {
+                        if (min == null)
+                            min = 0;
+                        sum+=min;
+                        sumEvenListOneBet.ExcelData.Add(excelModel);
+                        ListForIPPlan.ExcelData.Add(excelModel);
+                    }
                 }
                 else
                 {
@@ -174,6 +219,7 @@ namespace ProfPlan.ViewModels
             ExcelModel sumEvenOneBet = CalculateSum(sumEvenListOneBet, "чет");
             sumTableCollection.ExcelData.Add(sumOddOneBet);
             sumTableCollection.ExcelData.Add(sumEvenOneBet);
+            TablesCollectionTeacherSumList.Add(ListForIPPlan);
             return sumTableCollection;
         }
 
@@ -534,5 +580,47 @@ namespace ProfPlan.ViewModels
                 worksheet.Cell(row, column2Index).Value = tempValue;
             }
         }
+
+        //ИП Преподователей
+
+        public void CreateIndividualPlan(int index)
+        {
+            if(wasCalc == false)
+            {
+                SumAllTeachersTables(index);
+            }
+            var workbook = new XLWorkbook();
+            foreach(TableCollection tab in TablesCollectionTeacherSumList)
+            {
+                var worksheet = workbook.Worksheets.Add(tab.Tablename);
+                worksheet.Cell(1, 1).Value = "Дисциплина";
+                worksheet.Cell(1, 2).Value = "Группа";
+                worksheet.Cell(1, 3).Value = "Институт";
+                worksheet.Cell(1, 4).Value = "Часы";
+                int row = 2;
+                foreach (ExcelModel excel in tab.ExcelData)
+                {
+                    
+                        worksheet.Cell(row, 1).Value = excel.Discipline;
+                        worksheet.Cell(row, 2).Value = excel.Group;
+                        worksheet.Cell(row, 3).Value = excel.SubGroup;
+                        worksheet.Cell(row, 4).Value = excel.Institute;
+                        worksheet.Cell(row, 5).Value = excel.Total;
+                        row++;
+                    
+                }
+            }
+            directoryPath = GetSaveFilePath();
+            if (string.IsNullOrEmpty(directoryPath))
+                return;
+            workbook.SaveAs(directoryPath);
+        }
+
+        private static bool IsValidGroup(string group)
+        {
+            // Проверяем, что строка не пустая и содержит хотя бы одну букву
+            return !string.IsNullOrWhiteSpace(group) && group.Any(c => char.IsLetter(c));
+        }
+
     }
 }

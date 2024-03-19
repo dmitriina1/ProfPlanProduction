@@ -33,7 +33,7 @@
             </MenuItem>
             <MenuItem Header="Отчеты" HorizontalAlignment="Left" FontSize="16">
                 <MenuItem Header="Бланки нагрузки" FontSize="14" HorizontalAlignment="Left" Command="{Binding LoadCalcReport}"/>
-                <MenuItem Header="Индивидуальные планы" FontSize="14" HorizontalAlignment="Left"/>
+                <MenuItem Header="Индивидуальные планы" FontSize="14" HorizontalAlignment="Left" Command="{Binding LoadIndividualPlanReport}"/>
             </MenuItem>
             <ComboBox x:Name="comboBox" SelectedIndex="{Binding SelectedComboBoxIndex}">
                 <ComboBoxItem  Content="План"/>
