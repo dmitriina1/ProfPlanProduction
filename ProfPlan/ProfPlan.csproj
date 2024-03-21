@@ -165,6 +165,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Models\IndividualPlan.cs" />
     <Compile Include="Models\TablesCollections.cs" />
     <Compile Include="Models\Teacher.cs" />
     <Compile Include="Models\TeacherDatabase.cs" />

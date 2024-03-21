@@ -128,6 +128,35 @@ namespace ProfPlan.ViewModels
                        (ReviewDiploma ?? 0) +
                        (Other ?? 0);
         }
+
+        public string GetTypeOfWork()
+        {
+            var properties = new List<(string Name, double? Value)>
+    {
+        ("Чтение лекций", Lectures),
+        ("Проведение практических занятий", Practices),
+        ("Проведение лабораторных работ", Laboratory),
+        ("Проведение консультаций", Consultations),
+        ("Прием зачетов переаттестаций", Tests),
+        ("Экзамен семестровый", Exams),
+        ("Курсовые работы", CourseWorks),
+        ("Курсовые проекты", CourseProjects),
+        ("Проведение ГЭК", GEKAndGAK),
+        ("ВКР бакалавров", Diploma),
+        ("Прием РГЗ", RGZ),
+        ("Рецензирование диплома", ReviewDiploma),
+        ("Прочее", Other)
+    };
+
+            var nonZeroProperty = properties.FirstOrDefault(p => p.Value != null);
+
+            return nonZeroProperty != default ? nonZeroProperty.Name : null;
+        }
+
+        public IndividualPlan FormulateIndividualPlan()
+        {
+            return new IndividualPlan(Discipline, GetTypeOfWork(), Term, Group, GroupCount, SubGroup, $"СГУГиТ ({Institute})", Total);
+        }
     }
 }
 

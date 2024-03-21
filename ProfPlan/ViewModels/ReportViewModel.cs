@@ -592,35 +592,93 @@ namespace ProfPlan.ViewModels
             var workbook = new XLWorkbook();
             foreach(TableCollection tab in TablesCollectionTeacherSumList)
             {
+                List<IndividualPlan> IPList = new List<IndividualPlan>();
+                int row = 1;
                 var worksheet = workbook.Worksheets.Add(tab.Tablename);
-                worksheet.Cell(1, 1).Value = "Дисциплина";
-                worksheet.Cell(1, 2).Value = "Группа";
-                worksheet.Cell(1, 3).Value = "Институт";
-                worksheet.Cell(1, 4).Value = "Часы";
-                int row = 2;
+                worksheet.Cell(row, 1).Value = "Четный семестр";
+                row++;
+                worksheet.Cell(row, 1).Value = "Дисциплина";
+                worksheet.Cell(row, 2).Value = "Вид работы";
+                worksheet.Cell(row, 3).Value = "Группа";
+                worksheet.Cell(row, 4).Value = "Подгруппа";
+                worksheet.Cell(row, 5).Value = "Филиал";
+                worksheet.Cell(row, 6).Value = "Часы";
+                row++;
                 foreach (ExcelModel excel in tab.ExcelData)
                 {
-                    
-                        worksheet.Cell(row, 1).Value = excel.Discipline;
-                        worksheet.Cell(row, 2).Value = excel.Group;
-                        worksheet.Cell(row, 3).Value = excel.SubGroup;
-                        worksheet.Cell(row, 4).Value = excel.Institute;
-                        worksheet.Cell(row, 5).Value = excel.Total;
-                        row++;
-                    
+                    if(excel.Total != 0 && excel.Total!=null)
+                    {
+                        IPList.Add(excel.FormulateIndividualPlan());
+                        IPList[IPList.Count - 1].TypeOfWork = excel.GetTypeOfWork();
+                    }
                 }
+                var groupedPlans = IPList.GroupBy(ip => new { ip.Discipline, ip.TypeOfWork, ip.Term, ip.Group, ip.GroupCount, ip.SubGroup, ip.Branch })
+                                    .Select(group => new IndividualPlan(
+                                        group.Key.Discipline,
+                                        group.Key.TypeOfWork,
+                                        group.Key.Term,
+                                        group.Key.Group,
+                                        group.Key.GroupCount,
+                                        group.Key.SubGroup,
+                                        group.Key.Branch,
+                                        group.Sum(ip => ip.Hours)
+                                    ))
+                                    .ToList();
+
+                IPList = groupedPlans;
+                IPList = IPList.OrderBy(ip => ip.Discipline)
+               .ThenBy(ip => ip.TypeOfWork)
+               .ThenBy(ip => ip.SubGroup)
+               .ThenBy(ip => ip.Group)
+               
+               .ToList();
+                foreach (IndividualPlan ip in  IPList)
+                {
+                    if (ip.Term.IndexOf("нечет", StringComparison.OrdinalIgnoreCase) == -1)
+                    {
+                        worksheet.Cell(row, 1).Value = ip.Discipline;
+                        worksheet.Cell(row, 2).Value = ip.TypeOfWork;
+                        worksheet.Cell(row, 3).Value = ip.Group;
+                        worksheet.Cell(row, 4).Value = ip.SubGroup;
+                        worksheet.Cell(row, 5).Value = ip.Branch;
+                        worksheet.Cell(row, 6).Value = ip.Hours;
+                        row++;
+                    }
+                }
+                row+=3;
+
+                worksheet.Cell(row, 1).Value = "Нетный семестр";
+                row++;
+                worksheet.Cell(row, 1).Value = "Дисциплина";
+                worksheet.Cell(row, 2).Value = "Вид работы";
+                worksheet.Cell(row, 3).Value = "Группа";
+                worksheet.Cell(row, 4).Value = "Подгруппа";
+                worksheet.Cell(row, 5).Value = "Филиал";
+                worksheet.Cell(row, 6).Value = "Часы";
+                row++;
+                foreach (IndividualPlan ip in IPList)
+                {
+                    if (ip.Term.IndexOf("нечет", StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        worksheet.Cell(row, 1).Value = ip.Discipline;
+                        worksheet.Cell(row, 2).Value = ip.TypeOfWork;
+                        worksheet.Cell(row, 3).Value = ip.Group;
+                        worksheet.Cell(row, 4).Value = ip.SubGroup;
+                        worksheet.Cell(row, 5).Value = ip.Branch;
+                        worksheet.Cell(row, 6).Value = ip.Hours;
+                        row++;
+                    }
+                }
+                worksheet.Columns().AdjustToContents();
+                worksheet.Rows().AdjustToContents();
             }
+
             directoryPath = GetSaveFilePath();
             if (string.IsNullOrEmpty(directoryPath))
                 return;
             workbook.SaveAs(directoryPath);
         }
 
-        private static bool IsValidGroup(string group)
-        {
-            // Проверяем, что строка не пустая и содержит хотя бы одну букву
-            return !string.IsNullOrWhiteSpace(group) && group.Any(c => char.IsLetter(c));
-        }
 
     }
 }
