@@ -595,15 +595,11 @@ namespace ProfPlan.ViewModels
                 List<IndividualPlan> IPList = new List<IndividualPlan>();
                 int row = 1;
                 var worksheet = workbook.Worksheets.Add(tab.Tablename);
-                worksheet.Cell(row, 1).Value = "Четный семестр";
-                row++;
-                worksheet.Cell(row, 1).Value = "Дисциплина";
-                worksheet.Cell(row, 2).Value = "Вид работы";
-                worksheet.Cell(row, 3).Value = "Группа";
-                worksheet.Cell(row, 4).Value = "Подгруппа";
-                worksheet.Cell(row, 5).Value = "Филиал";
-                worksheet.Cell(row, 6).Value = "Часы";
-                row++;
+
+               
+
+                //Перечень предметов
+                
                 foreach (ExcelModel excel in tab.ExcelData)
                 {
                     if(excel.Total != 0 && excel.Total!=null)
@@ -632,6 +628,84 @@ namespace ProfPlan.ViewModels
                .ThenBy(ip => ip.Group)
                
                .ToList();
+                //Итого
+                worksheet.Cell(row, 1).Value = "Виды учебных занятий (работ)";
+                worksheet.Cell(row, 2).Value = "нечетный семестр";
+                worksheet.Cell(row, 3).Value = "четный семестр";
+                worksheet.Cell(row, 4).Value = "Итого за уч.год";
+                row++;
+                int r, t1, t2;
+                var groupedByTypeOfWork = IPList.GroupBy(ip => new { ip.TypeOfWork, ip.Term });
+                List<(string TypeOfWork, string Term, double? TotalHours)> resultList = new List<(string, string, double?)>();
+
+                foreach (var group in groupedByTypeOfWork)
+                {
+                    double? totalHours = group.Sum(ip => ip.Hours);
+                    resultList.Add((group.Key.TypeOfWork, group.Key.Term, totalHours));
+                }
+                 r = row;
+                foreach (var group in resultList)
+                {
+                    worksheet.Cell(row, 1).Value = group.TypeOfWork;
+                    if (group.Term.IndexOf("нечет", StringComparison.OrdinalIgnoreCase) == -1)
+                    {
+                        worksheet.Cell(row, 3).Value = group.TotalHours;
+                        row++;
+                    }
+                }
+                t1 = row;
+                row = r;
+                foreach(var group in resultList)
+                {
+                    if (group.Term.IndexOf("нечет", StringComparison.OrdinalIgnoreCase) != -1 &&  worksheet.Cell(row, 1).Value.ToString() == group.TypeOfWork)
+                    {
+                        worksheet.Cell(row, 2).Value = group.TotalHours;
+                        row++;
+                    }
+                }
+               
+                double sum;
+                if (t1>row)
+                {
+                    for(int i = r; i < t1; i++)
+                    {
+                        var ranges = worksheet.Range(i, 2, i, 3); 
+                        sum = ranges.CellsUsed().Sum(cell => cell.GetDouble());
+                        worksheet.Cell(i, 4).Value = sum;
+                    }
+                    row=t1;
+                }
+                else
+                {
+                    for (int i = r; i < row; i++)
+                    {
+                        var ranges = worksheet.Range(i, 2, i, 3);
+                        sum = ranges.CellsUsed().Sum(cell => cell.GetDouble());
+                        worksheet.Cell(i, 4).Value = sum;
+                    }
+                }
+                worksheet.Cell(row, 1).Value = "Итого";
+                var range = worksheet.Range(2, 2, row - 1, 2);
+                sum = range.CellsUsed().Sum(cell => cell.GetDouble()); 
+                worksheet.Cell(row, 2).Value = sum;
+                range = worksheet.Range(2, 3, row - 1, 3);
+                sum = range.CellsUsed().Sum(cell => cell.GetDouble());
+                worksheet.Cell(row, 3).Value = sum;
+                range = worksheet.Range(2, 4, row - 1, 4);
+                sum = range.CellsUsed().Sum(cell => cell.GetDouble());
+                worksheet.Cell(row, 4).Value = sum;
+                row+=2;
+
+                //
+                worksheet.Cell(row, 1).Value = "Четный семестр";
+                row++;
+                worksheet.Cell(row, 1).Value = "Дисциплина";
+                worksheet.Cell(row, 2).Value = "Вид работы";
+                worksheet.Cell(row, 3).Value = "Группа";
+                worksheet.Cell(row, 4).Value = "Подгруппа";
+                worksheet.Cell(row, 5).Value = "Филиал";
+                worksheet.Cell(row, 6).Value = "Часы";
+                row++;
                 foreach (IndividualPlan ip in  IPList)
                 {
                     if (ip.Term.IndexOf("нечет", StringComparison.OrdinalIgnoreCase) == -1)
@@ -645,7 +719,7 @@ namespace ProfPlan.ViewModels
                         row++;
                     }
                 }
-                row+=3;
+                row+=2;
 
                 worksheet.Cell(row, 1).Value = "Нетный семестр";
                 row++;
