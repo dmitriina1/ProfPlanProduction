@@ -39,13 +39,7 @@ namespace ProfPlan.ViewModels
                 {
                     System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
                     if (Workload!=null)
-                        if(Workload.IndexOf(",")==-1)
                      doubleValue = Convert.ToDouble(Workload);
-                    else
-                        {
-                            Workload = Workload.Replace(",", ".");
-                                doubleValue = Convert.ToDouble(Workload);
-                        }
                     else doubleValue = null;
                     if (Lastname !=null && Firstname != null)
                     {

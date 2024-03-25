@@ -84,10 +84,12 @@ namespace ProfPlan.ViewModels
 
                     double? autumnIndex = autumnHours/totalHours;
                     double? springIndex = springHours/totalHours;
-
+                    if (bet == null)
+                        bet = totalHours;
                     if (betPercent == 1 || betPercent == null)
                     {
                         sumTableCollection = new TableCollection($"{tableCollection.Tablename}");
+
                         
                         if (bet!=null)
                         {
@@ -404,7 +406,7 @@ namespace ProfPlan.ViewModels
                             fworksheet.Cell(rowNumber, columnNumber++).Value = value != null ? value.ToString() : "";
                         }
 
-                        fworksheet.Cell(rowNumber, columnNumber).Value = totalSemester.ToString().Replace(",",".");
+                        fworksheet.Cell(rowNumber, columnNumber).Value = totalSemester.ToString();
 
                         rowNumber++;
                     }
@@ -442,7 +444,7 @@ namespace ProfPlan.ViewModels
                         }
 
 
-                        fworksheet.Cell(rowNumber, cnum).Value = totalSemester.ToString().Replace(",", ".");
+                        fworksheet.Cell(rowNumber, cnum).Value = totalSemester.ToString();
 
                         rowNumber++;
                     }
@@ -463,7 +465,7 @@ namespace ProfPlan.ViewModels
             {
                 var value21 = fworksheet.Cell(row, 21).Value.ToString().ToNullable<double>();
                 var value41 = fworksheet.Cell(row, 41).Value.ToString().ToNullable<double>();
-                fworksheet.Cell(row, 42).Value = (value21 + value41).ToString().Replace(",", ".");
+                fworksheet.Cell(row, 42).Value = (value21 + value41).ToString();
             }
             frow = 1;
             //sworksheet.Range(frow, 1, frow, 3).Merge();
@@ -747,12 +749,24 @@ namespace ProfPlan.ViewModels
                 worksheet.Rows().AdjustToContents();
             }
 
-            directoryPath = GetSaveFilePath();
+            directoryPath = GetSaveFilePathForIP();
             if (string.IsNullOrEmpty(directoryPath))
                 return;
             workbook.SaveAs(directoryPath);
         }
+        private string GetSaveFilePathForIP()
+        {
+            System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+            saveFileDialog.Filter = "Excel files (*.xlsx)|*.xlsx|All files (*.*)|*.*";
+            saveFileDialog.Title = "Save Excel File";
+            saveFileDialog.FileName = $"ИП {DateTime.Today:dd-MM-yyyy}.xlsx";
 
+            System.Windows.Forms.DialogResult result = saveFileDialog.ShowDialog();
+            if (result == System.Windows.Forms.DialogResult.OK)
+                return saveFileDialog.FileName;
+
+            return null;
+        }
 
     }
 }

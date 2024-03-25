@@ -65,7 +65,6 @@ namespace ProfPlan.Models
             m_sqlCmd.ExecuteNonQuery();
             foreach (var teacher in teachers)
             {
-                System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
 
                 m_sqlCmd.CommandText = @"
                         INSERT INTO Teachers (LastName, FirstName, MiddleName, Position, AcademicDegree, Workload)

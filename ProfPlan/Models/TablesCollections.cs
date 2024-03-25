@@ -13,7 +13,14 @@ namespace ProfPlan.Models
     internal static class TablesCollections 
     {
         private static ObservableCollection<TableCollection> TablesCollection = new ObservableCollection<TableCollection>();
-        
+        public static void AddByIndex(int index, ExcelData tab)
+        {
+            TablesCollection[index].ExcelData.Add(tab);
+        }
+        public static int Count()
+        {
+            return TablesCollection.Count();
+        }
         public static void Clear()
         {
             TablesCollection.Clear();

@@ -30,23 +30,47 @@ namespace ProfPlan.ViewModels
         private string directoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"Расчет нагрузки {DateTime.Today:dd-MM-yyyy}");
         private string filePath = "";
         private int Number = 1;
-        private RelayCommand _loadDataCommand;
         private DataTableCollection tableCollection;
+
+        /// <summary>
+        /// Вкладка Файл 
+        /// </summary>
+
+        // Открытие Excel файла
+        #region Open Data from Excel
+        private RelayCommand _loadDataCommand;
+
         public ICommand LoadDataCommand
         {
             get { return _loadDataCommand ?? (_loadDataCommand = new RelayCommand(LoadData)); }
         }
+
+        private void LoadData(object parameter)
+        {
+            filePath = GetExcelFilePath();
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                tableCollection = ReadExcelData(filePath).Tables;
+                TablesCollections.Clear();
+                foreach (DataTable table in tableCollection)
+                {
+                    ProcessDataTable(table);
+                }
+                OnPropertyChanged(nameof(TablesCollections));
+                UpdateListBoxItemsSource();
+            }
+
+        }
+
         private string GetExcelFilePath()
         {
             var openFileDialog = new OpenFileDialog() { Filter = "Excel Files|*.xls;*.xlsx" };
 
             return openFileDialog.ShowDialog() == true ? openFileDialog.FileName : null;
         }
+
         private DataSet ReadExcelData(string filePath)
         {
-            if (string.IsNullOrEmpty(filePath))
-                return null;
-            directoryPath = filePath;
             using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
             {
                 using (IExcelDataReader reader = ExcelReaderFactory.CreateReader(stream))
@@ -58,11 +82,11 @@ namespace ProfPlan.ViewModels
                 }
             }
         }
+
         private void ProcessDataTable(DataTable table)
         {
-            string tabname = "";
             Number = 1;
-            tabname = table.TableName;
+            string tabname = table.TableName;
             ObservableCollection<ExcelData> list = new ObservableCollection<ExcelData>();
             int rowIndex = -1;
             bool haveTeacher = false;
@@ -198,7 +222,7 @@ namespace ProfPlan.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Error adding data: {ex.Message}");
+                        //MessageBox.Show($"Error adding data: {ex.Message}");
                     }
                 }
             }
@@ -209,6 +233,7 @@ namespace ProfPlan.ViewModels
             TablesCollections.Add(new TableCollection(tabname, list));
 
         }
+
         private void ProcessTotalTable(DataTable table, ObservableCollection<ExcelData> list)
         {
             bool hasBetPer = false;
@@ -252,26 +277,13 @@ namespace ProfPlan.ViewModels
             }
         }
 
-        private void LoadData(object parameter)
-        {
-            filePath = GetExcelFilePath();
-            if (!string.IsNullOrEmpty(filePath))
-            {
-                tableCollection = ReadExcelData(filePath).Tables;
-                TablesCollections.Clear();
-                foreach (DataTable table in tableCollection)
-                {
-                    ProcessDataTable(table);
-                }
-                OnPropertyChanged(nameof(TablesCollections));
-                UpdateListBoxItemsSource();
-            }
+        #endregion
 
-        }
-
-        // Все для взаимодействия ComboBox и ListBox
-
+        // Обновление содержимого dataGrid и выбор отображаемых таблиц в tabControl
+        #region Display data in a datagrid
         private int _selectedComboBoxIndex;
+        private ObservableCollection<TableCollection> _displayedTables;
+        private TableCollection _selectedTable;
 
         public int SelectedComboBoxIndex
         {
@@ -288,7 +300,18 @@ namespace ProfPlan.ViewModels
                 }
             }
         }
-        private ObservableCollection<TableCollection> _displayedTables;
+
+        private void UpdateListBoxItemsSource()
+        {
+            if (SelectedComboBoxIndex == 0)
+            {
+                DisplayedTables = TablesCollections.GetTablesCollectionWithP();
+            }
+            else if (SelectedComboBoxIndex == 1)
+            {
+                DisplayedTables = TablesCollections.GetTablesCollectionWithF();
+            }
+        }
 
         public ObservableCollection<TableCollection> DisplayedTables
         {
@@ -302,21 +325,6 @@ namespace ProfPlan.ViewModels
                 }
             }
         }
-        private void UpdateListBoxItemsSource()
-        {
-            if (SelectedComboBoxIndex == 0)
-            {
-                DisplayedTables = TablesCollections.GetTablesCollectionWithP();
-            }
-            else if (SelectedComboBoxIndex == 1)
-            {
-                DisplayedTables = TablesCollections.GetTablesCollectionWithF();
-            }
-        }
-
-        //Все для взаимодействия listbox и datagrid
-
-        private TableCollection _selectedTable;
 
         public TableCollection SelectedTable
         {
@@ -327,16 +335,15 @@ namespace ProfPlan.ViewModels
                 {
                     _selectedTable = value;
                     OnPropertyChanged(nameof(SelectedTable));
-                    // Обновляем данные в DataGrid при выборе нового элемента в ListBox
-
-
-
                 }
             }
         }
 
-        private Dock _tabStripPlacement = Dock.Top;
+        #endregion
 
+        // Выбор места для отображения tabItems
+        #region Settings
+        private Dock _tabStripPlacement = Dock.Left;
         public Dock TabStripPlacement
         {
             get { return _tabStripPlacement; }
@@ -349,44 +356,23 @@ namespace ProfPlan.ViewModels
                 }
             }
         }
-        // Выбор содержимого dataGrid
+        #endregion
 
-        //Сохранение 
+        // Сохраение Расчета нагрузки
+        #region Save and SaveAs
         private RelayCommand _saveDataToExcel;
+        private RelayCommand _saveDataToExcelAs;
+
         public ICommand SaveDataCommand
         {
             get { return _saveDataToExcel ?? (_saveDataToExcel = new RelayCommand(SaveToExcel)); }
         }
-        private RelayCommand _saveDataToExcelAs;
-        public ICommand SaveDataAsCommand
-        {
-            get { return _saveDataToExcelAs ?? (_saveDataToExcelAs = new RelayCommand(SaveToExcelAs)); }
-        }
-        private void SaveToExcelAs(object parameter)
-        {
-            SaveToExcelAs();
-        }
-        private void SaveToExcelAs()
-        {
-            System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();
-            saveFileDialog.Filter = "Excel files (*.xlsx)|*.xlsx|All files (*.*)|*.*";
-            saveFileDialog.Title = "Save Excel File";
-            saveFileDialog.FileName = $"Расчет Нагрузки {DateTime.Today:dd-MM-yyyy}.xlsx";
 
-            System.Windows.Forms.DialogResult result = saveFileDialog.ShowDialog();
-
-            if (result == System.Windows.Forms.DialogResult.OK)
-            {
-                directoryPath = saveFileDialog.FileName;
-            }
-            else
-            {
-                return;
-            }
-            SaveToExcels(TablesCollections.GetTablesCollection());
-        }
         private void SaveToExcel(object parameter)
         {
+            if(filePath.EndsWith(".xls", StringComparison.OrdinalIgnoreCase) == false || filePath == "")
+                SaveToExcelAs();
+            else
             SaveToExcels(TablesCollections.GetTablesCollection());
         }
 
@@ -434,7 +420,7 @@ namespace ProfPlan.ViewModels
                         worksheet.Rows().AdjustToContents();
                     }
                 }
-                    
+
 
                 SaveWorkbook(workbook);
             }
@@ -496,7 +482,7 @@ namespace ProfPlan.ViewModels
                 rowNumber++;
                 columnNumber = 1;
             }
-           
+
         }
 
         private IEnumerable<string> GetPropertyNames(object data)
@@ -508,21 +494,43 @@ namespace ProfPlan.ViewModels
 
         private void SaveWorkbook(XLWorkbook workbook)
         {
-            if (directoryPath.EndsWith(".xls", StringComparison.OrdinalIgnoreCase))
+            workbook.SaveAs(directoryPath);
+        }
+
+        public ICommand SaveDataAsCommand
+        {
+            get { return _saveDataToExcelAs ?? (_saveDataToExcelAs = new RelayCommand(SaveToExcelAs)); }
+        }
+
+        private void SaveToExcelAs(object parameter)
+        {
+            SaveToExcelAs();
+        }
+
+        private void SaveToExcelAs()
+        {
+            System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+            saveFileDialog.Filter = "Excel files (*.xlsx)|*.xlsx|All files (*.*)|*.*";
+            saveFileDialog.Title = "Save Excel File";
+            saveFileDialog.FileName = $"Расчет Нагрузки {DateTime.Today:dd-MM-yyyy}.xlsx";
+
+            System.Windows.Forms.DialogResult result = saveFileDialog.ShowDialog();
+
+            if (result == System.Windows.Forms.DialogResult.OK)
             {
-                SaveToExcelAs();
-            }
-            else if (directoryPath != "")
-            {
-                workbook.SaveAs(directoryPath);
+                directoryPath = saveFileDialog.FileName;
             }
             else
             {
-                SaveToExcelAs();
+                return;
             }
+            SaveToExcels(TablesCollections.GetTablesCollection());
         }
 
-        //Выход
+        #endregion
+
+        //Выход из приложения
+        #region Exit
         private RelayCommand _exitCommand;
 
         public ICommand ExitCommand
@@ -533,8 +541,10 @@ namespace ProfPlan.ViewModels
         {
             Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
         }
+        #endregion
 
-        //Создать
+        //Создать таблицу для плана или факта
+        #region Create table
         private RelayCommand _createCommand;
 
         public ICommand CreateCommand
@@ -543,7 +553,11 @@ namespace ProfPlan.ViewModels
         }
         private void CreateBaseTableCollection(object parameter)
         {
-            if(SelectedComboBoxIndex == 0 && TablesCollections.GetTableByName("ПИиИС",SelectedComboBoxIndex) == false)
+            CreateTableCollection();
+        }
+        private void CreateTableCollection()
+        {
+            if (SelectedComboBoxIndex == 0 && TablesCollections.GetTableByName("ПИиИС", SelectedComboBoxIndex) == false)
             {
                 TablesCollections.Add(new TableCollection() { Tablename = "П_ПИиИС" });
             }
@@ -553,9 +567,16 @@ namespace ProfPlan.ViewModels
             }
             UpdateListBoxItemsSource();
         }
+        #endregion
 
-        //Таблица
+
+
+        /// <summary>
+        /// Вкладка Таблица
+        /// </summary>
+
         //Очистить таблицу
+        #region Clear table
         private RelayCommand _clearTableCommand;
 
         public ICommand ClearTableCommand
@@ -570,48 +591,104 @@ namespace ProfPlan.ViewModels
                 UpdateListBoxItemsSource();
             }
         }
+        #endregion
 
         //Перенести преподавателей
+        #region Move Teachers from Plan to Fact
         private RelayCommand _moveTeachersCommand;
+
         public ICommand MoveTeachersCommand
         {
             get { return _moveTeachersCommand ?? (_moveTeachersCommand = new RelayCommand(MoveTeachers)); }
         }
+
         private void MoveTeachers(object parameter)
         {
             int ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
             int stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
             if (ftableindex != -1 && stableindex != -1)
             {
-                for (int i = 0; i < TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count; i++)
+                try
                 {
-                    if (TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] is ExcelModel excelModel && excelModel.Teacher == "")
+                    if (TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count != 0)
                     {
-                        ExcelModel stableData = TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] as ExcelModel;
-                        ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
-
-                        if (stableData != null && ftableData != null &&
-                            stableData.Term == ftableData.Term &&
-                            stableData.Group == ftableData.Group &&
-                            stableData.Institute == ftableData.Institute &&
-                            stableData.FormOfStudy == ftableData.FormOfStudy &&
-                            ftableData.Teacher != "")
+                        for (int i = 0; i < TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count; i++)
                         {
-                            stableData.Teacher = ftableData.Teacher;
+                            if (TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] is ExcelModel excelModel && excelModel.Teacher == "")
+                            {
+                                ExcelModel stableData = TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] as ExcelModel;
+                                ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
+
+                                if (stableData != null && ftableData != null &&
+                                    stableData.Term == ftableData.Term &&
+                                    stableData.Group == ftableData.Group &&
+                                    stableData.Institute == ftableData.Institute &&
+                                    stableData.FormOfStudy == ftableData.FormOfStudy &&
+                                    ftableData.Teacher != "")
+                                {
+                                    stableData.Teacher = ftableData.Teacher;
+                                }
+                            }
                         }
                     }
+                    else
+                    {
+                        MessageBox.Show("Лист Факт пустой! Поэтому данные с листа План были скопированы");
+                        CreateTableCollectionsForMove();
+                        ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
+                        stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
+                        for (int i = 0; i < TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count; i++)
+                        {
+                            ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
+                            TablesCollections.AddByIndex(stableindex, ftableData);
+                        }
+                    }
+
                 }
-                
+                catch
+                {
+
+                }
+            }
+            else
+            {
+                MessageBox.Show("Лист Факт пустой! Поэтому данные с листа План были скопированы");
+                CreateTableCollectionsForMove();
+                ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
+                stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
+                for (int i = 0; i < TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count; i++)
+                {
+                    ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
+                    TablesCollections.AddByIndex(stableindex, ftableData);
+                }
             }
             SelectedTable = null;
             UpdateListBoxItemsSource();
         }
 
+        private void CreateTableCollectionsForMove()
+        {
+            if (TablesCollections.GetTableByName("П_ПИиИС", 0) == false)
+            {
+                TablesCollections.Add(new TableCollection() { Tablename = "П_ПИиИС" });
+            }
+            if ( TablesCollections.GetTableByName("Ф_ПИиИС", 1) == false)
+            {
+                TablesCollections.Add(new TableCollection() { Tablename = "Ф_ПИиИС" });
+            }
+            UpdateListBoxItemsSource();
+        }
+        #endregion
+
+        //Генерация листов преподавателей
+        #region Generate Teachers lists
         private RelayCommand _generateTeachersLists;
+
         public ICommand GenerateTeachersLists
         {
             get { return _generateTeachersLists ?? (_generateTeachersLists = new RelayCommand(GenerateTeacher)); }
         }
+
         private void GenerateTeacher(object parameter)
         {
             if(SelectedComboBoxIndex != -1 && TablesCollections.GetTableIndexForGenerate("ПИиИС", SelectedComboBoxIndex) != -1)
@@ -692,12 +769,23 @@ namespace ProfPlan.ViewModels
             }
         }
 
-        //Список преподавателей
+        #endregion
+
+
+
+        /// <summary>
+        /// Вкладка Преподаватели
+        /// </summary>
+
+        //Открытие окна со списком преподавателей
+        #region Show Teachers Window
         private RelayCommand _showTeachersWindowCommand;
+
         public ICommand ShowTeachersWindowCommand
         {
             get { return _showTeachersWindowCommand ?? (_showTeachersWindowCommand = new RelayCommand(ShowTeachersWindow)); }
         }
+
         private void ShowTeachersWindow(object obj)
         {
             var techerswindow = obj as Window;
@@ -708,8 +796,12 @@ namespace ProfPlan.ViewModels
             teacherlist.ShowDialog();
         }
 
-        //Отчеты
+        #endregion
+
+        //Бланк нагрузки
+        #region CalcReport
         private RelayCommand _loadCalcReport;
+
         public ICommand LoadCalcReport
         {
             get { return _loadCalcReport ?? (_loadCalcReport = new RelayCommand(CreateLoadCalcReport)); }
@@ -720,9 +812,12 @@ namespace ProfPlan.ViewModels
             ReportViewModel loadCalcVM = new ReportViewModel();
             loadCalcVM.CreateLoadCalc(SelectedComboBoxIndex);
         }
+        #endregion
 
-
+        //ИП преподавателей
+        #region Individual Plan report
         private RelayCommand _individualPlanReport;
+
         public ICommand LoadIndividualPlanReport
         {
             get { return _individualPlanReport ?? (_individualPlanReport = new RelayCommand(CreateIndividualPlanReport)); }
@@ -733,5 +828,6 @@ namespace ProfPlan.ViewModels
             ReportViewModel loadCalcVM = new ReportViewModel();
             loadCalcVM.CreateIndividualPlan(SelectedComboBoxIndex);
         }
+        #endregion
     }
 }

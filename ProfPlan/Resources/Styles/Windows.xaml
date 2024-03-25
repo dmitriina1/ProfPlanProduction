@@ -4,7 +4,7 @@
     
 
     <DataTemplate x:Key="FirstTemplate" >
-        <DataGrid ItemsSource="{Binding ExcelData}" AutoGenerateColumns="False" VirtualizingPanel.IsVirtualizing="True" CanUserAddRows="False">
+        <DataGrid ItemsSource="{Binding ExcelData}" Language="ru-RU" AutoGenerateColumns="False" VirtualizingPanel.IsVirtualizing="True" CanUserAddRows="False">
             <DataGrid.CellStyle>
                 <Style TargetType="DataGridCell">
                     <Setter Property="BorderThickness" Value="0.2"/>
@@ -54,7 +54,7 @@ ItemsSource="{Binding Teachers}"/>
     </DataTemplate>
 
     <DataTemplate  x:Key="SecondTemplate" >
-        <DataGrid ItemsSource="{Binding ExcelData}" AutoGenerateColumns="False" VirtualizingPanel.IsVirtualizing="True" CanUserAddRows="False">
+        <DataGrid ItemsSource="{Binding ExcelData}" Language="ru-RU" AutoGenerateColumns="False" VirtualizingPanel.IsVirtualizing="True" CanUserAddRows="False">
             <DataGrid.CellStyle>
                 <Style TargetType="DataGridCell">
                     <Setter Property="BorderThickness" Value="0.2"/>

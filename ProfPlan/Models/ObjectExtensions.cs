@@ -18,7 +18,6 @@ namespace ProfPlan.Models
             {
                 try
                 {
-                    System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
                     return (T)Convert.ChangeType(value, typeof(T));
                 }
                 catch (InvalidCastException)
