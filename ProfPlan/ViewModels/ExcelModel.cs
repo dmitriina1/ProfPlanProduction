@@ -144,7 +144,7 @@ namespace ProfPlan.ViewModels
         ("Проведение ГЭК", GEKAndGAK),
         ("ВКР бакалавров", Diploma),
         ("Прием РГЗ", RGZ),
-        ("Рецензирование диплома", ReviewDiploma),
+        ("Практическая работа/Рецензирование диплома", ReviewDiploma),
         ("Прочее", Other)
     };
 
