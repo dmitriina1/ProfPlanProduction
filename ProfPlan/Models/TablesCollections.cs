@@ -38,7 +38,22 @@ namespace ProfPlan.Models
                 TablesCollection.Add(tabCol);
             }
         }
+        public static void AddInOldTabCol(TableCollection tabCol)
+        {
+            int foundIndex = GetTableIndexByName(tabCol.Tablename);
 
+            if (foundIndex != -1)
+            {
+                for(int i=0;i<tabCol.ExcelData.Count;i++)
+                {
+                    TablesCollection[foundIndex].ExcelData.Add(tabCol.ExcelData[i]);
+                }
+            }
+            else
+            {
+                TablesCollection.Add(tabCol);
+            }
+        }
         public static ObservableCollection<TableCollection> GetTablesCollection()
         {
             return new ObservableCollection<TableCollection>(TablesCollection);
