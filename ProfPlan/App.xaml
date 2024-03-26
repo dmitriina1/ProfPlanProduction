@@ -17,7 +17,8 @@
                    FirstTemplate="{StaticResource FirstTemplate}" 
                    SecondTemplate="{StaticResource SecondTemplate}"/>
             <views:TabStripPlacementConverter x:Key="TabStripPlacementConverter"
-       TopBottomTemplate="{StaticResource TopBottomTemplate}" 
+       TopTemplate="{StaticResource TopTemplate}" 
+               BottomTemplate="{StaticResource BottomTemplate}" 
             LeftTemplate="{StaticResource LeftTemplate}" 
             RightTemplate ="{StaticResource RightTemplate}"/>
         </ResourceDictionary>

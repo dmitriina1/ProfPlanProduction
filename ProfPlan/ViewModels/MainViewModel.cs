@@ -286,6 +286,7 @@ namespace ProfPlan.ViewModels
         #endregion
 
         //Добавление данных из Excel-файла
+        #region Add Data from Excel
         private RelayCommand _addDataCommand;
 
         public ICommand AddDataCommand
@@ -476,6 +477,8 @@ namespace ProfPlan.ViewModels
             TablesCollections.AddInOldTabCol(new TableCollection(tabname, list));
         }
 
+        #endregion
+
         // Обновление содержимого dataGrid и выбор отображаемых таблиц в tabControl
         #region Display data in a datagrid
         private int _selectedComboBoxIndex;
@@ -573,6 +576,53 @@ namespace ProfPlan.ViewModels
                     OnPropertyChanged(nameof(TabStripPlacement));
                 }
             }
+        }
+        private string _placementIcon = "ArrowLeft";
+        public string PlacementIcon
+        {
+            get { return _placementIcon; }
+            set
+            {
+                if (_placementIcon != value)
+                {
+                    _placementIcon = value;
+                    OnPropertyChanged(nameof(PlacementIcon));
+                }
+            }
+        }
+
+        private RelayCommand _selectTabItemsPlacement;
+        public ICommand SelectTabItemsPlacementCommand
+        {
+            get { return _selectTabItemsPlacement ?? (_selectTabItemsPlacement = new RelayCommand(SelectTabItemsPlacement)); }
+        }
+        private void SelectTabItemsPlacement(object parameter)
+        {
+            switch (_tabStripPlacement)
+            {
+                case Dock.Top:
+                    _tabStripPlacement = Dock.Right;
+                    PlacementIcon = "ArrowRight";
+                    break;
+                case Dock.Right:
+                    _tabStripPlacement = Dock.Bottom;
+                    PlacementIcon = "ArrowDown";
+                    break;
+                case Dock.Bottom:
+                    _tabStripPlacement = Dock.Left;
+                    PlacementIcon = "ArrowLeft";
+                    break;
+                case Dock.Left:
+                    _tabStripPlacement = Dock.Top;
+                    PlacementIcon = "ArrowUp";
+                    break;
+                default:
+                    _tabStripPlacement = Dock.Left;
+                    PlacementIcon = "ArrowLeft";// Default to Top if it's not any of the specified values
+                    break;
+            }
+            OnPropertyChanged(nameof(TabStripPlacement));
+            OnPropertyChanged(nameof(PlacementIcon));
         }
         #endregion
 

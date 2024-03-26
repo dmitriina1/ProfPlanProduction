@@ -88,7 +88,7 @@ ItemsSource="{Binding Teachers}"/>
         </Setter>
     </Style>
 
-    <ControlTemplate TargetType="TabControl" x:Key="TopBottomTemplate">
+    <ControlTemplate TargetType="TabControl" x:Key="TopTemplate">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -101,6 +101,18 @@ ItemsSource="{Binding Teachers}"/>
         </Grid>
     </ControlTemplate>
 
+    <ControlTemplate TargetType="TabControl" x:Key="BottomTemplate">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <TabPanel x:Name="HeaderPanel" Panel.ZIndex="1" KeyboardNavigation.TabIndex="1" Grid.Column="0" IsItemsHost="true"/>
+            </ScrollViewer>
+            <ContentPresenter Grid.Row="0" ContentSource="SelectedContent"/>
+        </Grid>
+    </ControlTemplate>
 
     <ControlTemplate x:Key="LeftTemplate" TargetType="TabControl">
         <Grid>
