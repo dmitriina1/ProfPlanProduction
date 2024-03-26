@@ -43,7 +43,20 @@ namespace ProfPlan.ViewModels
             }
         }
         public int Number { get; set; }
-        public string Teacher { get; set; }
+        private string _teacher;
+
+        public string Teacher
+        {
+            get { return _teacher; }
+            set
+            {
+                if (_teacher != value)
+                {
+                    _teacher = value;
+                    OnPropertyChanged(nameof(Teacher));
+                }
+            }
+        }
         public string Discipline { get; set; }
         public string Term { get; set; }
         public string Group { get; set; }

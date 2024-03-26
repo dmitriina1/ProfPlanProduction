@@ -18,6 +18,7 @@ using ProfPlan.ViewModels.Base;
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ProfPlan.Views;
+using System.Collections.Specialized;
 
 namespace ProfPlan.ViewModels
 {
@@ -26,7 +27,9 @@ namespace ProfPlan.ViewModels
         public MainViewModel()
         {
             ExcelModel.UpdateSharedTeachers();
+
         }
+
         private string directoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"Расчет нагрузки {DateTime.Today:dd-MM-yyyy}");
         private string filePath = "";
         private int Number = 1;
@@ -230,6 +233,10 @@ namespace ProfPlan.ViewModels
             {
                 ProcessTotalTable(table, list);
             }
+            for(int i=0;i<list.Count; i++)
+            {
+                list[i].PropertyChanged +=SelectedItemPropertyChanged;
+            }
             TablesCollections.Add(new TableCollection(tabname, list));
 
         }
@@ -284,6 +291,9 @@ namespace ProfPlan.ViewModels
         private int _selectedComboBoxIndex;
         private ObservableCollection<TableCollection> _displayedTables;
         private TableCollection _selectedTable;
+        private ObservableCollection<ExcelData> _selectedItems = new ObservableCollection<ExcelData>();
+        public ObservableCollection<ExcelData> SelectedItems
+        { get { return _selectedItems; } }
 
         public int SelectedComboBoxIndex
         {
@@ -297,6 +307,23 @@ namespace ProfPlan.ViewModels
 
                     // Обновляем ItemsSource для ListBox в зависимости от выбранного элемента в ComboBox
                     UpdateListBoxItemsSource();
+                }
+            }
+        }
+
+        private void SelectedItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Teacher")
+            {
+                var changedItem = (ExcelModel)sender;
+                var newTeacher = changedItem.Teacher;
+
+                foreach (ExcelModel item in _selectedItems)
+                {
+                    if (item != changedItem)
+                    {
+                        item.Teacher = newTeacher;
+                    }
                 }
             }
         }
@@ -338,6 +365,7 @@ namespace ProfPlan.ViewModels
                 }
             }
         }
+
 
         #endregion
 

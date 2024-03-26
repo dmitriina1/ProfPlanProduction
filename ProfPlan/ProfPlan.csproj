@@ -165,6 +165,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AttachedProperties\MultiSelectorBehaviours.cs" />
+    <Compile Include="AttachedProperties\SynchronizationManager.cs" />
+    <Compile Include="AttachedProperties\TwoListSynchronizer.cs" />
+    <Compile Include="Converters\IListItemConverter.cs" />
     <Compile Include="Models\IndividualPlan.cs" />
     <Compile Include="Models\TablesCollections.cs" />
     <Compile Include="Models\Teacher.cs" />
