@@ -631,25 +631,27 @@ namespace ProfPlan.ViewModels
            .ToList();
             return IPList;
         }
-        public void WorkWithWorkSheet(IXLWorksheet worksheet, int row, int r, List<IndividualPlan> IPList)
+        public void WorkWithWorkSheet(IXLWorksheet worksheet, int row, int r, List<IndividualPlan> IPList ,int col1, int col2, int col3)
         {
-            double sum;
+            double? sum;
             for (int i = r; i < row; i++)
             {
-                var ranges = worksheet.Range(i, 2, i, 3);
-                sum = ranges.CellsUsed().Sum(cell => cell.GetDouble());
-                worksheet.Cell(i, 4).Value = sum;
+                var range1 = string.IsNullOrEmpty(worksheet.Row(i).Cell(col1).Value.ToString()) ? 0 : Convert.ToDouble(worksheet.Row(i).Cell(col1).Value.ToString());
+                var range2 = string.IsNullOrEmpty(worksheet.Row(i).Cell(col2).Value.ToString()) ? 0 : Convert.ToDouble(worksheet.Row(i).Cell(col2).Value.ToString());
+                sum = Convert.ToDouble(range1) + Convert.ToDouble(range2);
+                worksheet.Cell(i, col3).Value = sum;
             }
             worksheet.Cell(row, 1).Value = "Итого";
-            var range = worksheet.Range(2, 2, row - 1, 2);
+
+            var range = worksheet.Range(3, col1, row - 1, col1);
             sum = range.CellsUsed().Sum(cell => cell.GetDouble());
-            worksheet.Cell(row, 2).Value = sum;
-            range = worksheet.Range(2, 3, row - 1, 3);
+            worksheet.Cell(row, col1).Value = sum;
+            range = worksheet.Range(3, col2, row - 1, col2);
             sum = range.CellsUsed().Sum(cell => cell.GetDouble());
-            worksheet.Cell(row, 3).Value = sum;
-            range = worksheet.Range(2, 4, row - 1, 4);
+            worksheet.Cell(row, col2).Value = sum;
+            range = worksheet.Range(3, col3, row - 1, col3);
             sum = range.CellsUsed().Sum(cell => cell.GetDouble());
-            worksheet.Cell(row, 4).Value = sum;
+            worksheet.Cell(row, col3).Value = sum;
 
             row+=2;
 
@@ -723,10 +725,25 @@ namespace ProfPlan.ViewModels
                     var worksheet = workbook.Worksheets.Add(tab.Tablename);
 
                     //Итого
+                    worksheet.Range(row, 1, row + 1, 1).Merge();
                     worksheet.Cell(row, 1).Value = "Виды учебных занятий (работ)";
+                   
+                    worksheet.Range(row, 2, row, 3).Merge();
                     worksheet.Cell(row, 2).Value = "нечетный семестр";
-                    worksheet.Cell(row, 3).Value = "четный семестр";
-                    worksheet.Cell(row, 4).Value = "Итого за уч.год";
+
+                    worksheet.Range(row, 4, row, 5).Merge();
+                    worksheet.Cell(row, 4).Value = "четный семестр";
+
+                    worksheet.Range(row, 6, row, 7).Merge();
+                    worksheet.Cell(row, 6).Value = "Итого за уч.год";
+                    row++;
+                    worksheet.Cell(row, 2).Value = "План";
+                    worksheet.Cell(row, 4).Value = "План";
+                    worksheet.Cell(row, 6).Value = "План";
+                    worksheet.Cell(row, 7).Value = "Факт";
+                    worksheet.Cell(row, 3).Value = "Факт";
+                    worksheet.Cell(row, 5).Value = "Факт";
+
                     row++;
                     int r, ind;
                     //var groupedByTypeOfWork = IPList.GroupBy(ip => new { ip.TypeOfWork, ip.Term });
@@ -743,10 +760,23 @@ namespace ProfPlan.ViewModels
                                                     .Select(group => new { TypeOfWork = group.Key, TotalHours = group.Sum(ip => ip.Hours) })
                                                     .ToList();
                     r = row;
+                    int col1,col2, col3;
+                    if (index == 0)
+                    {
+                        col1 = 2;
+                        col2 = 4;
+                        col3 = 6;
+                    }
+                    else
+                    {
+                        col1 = 3;
+                        col2 = 5;
+                        col3 = 7;
+                    }
                     foreach (var group in oddTermGrouped)
                     {
                         worksheet.Cell(row, 1).Value = group.TypeOfWork;
-                        worksheet.Cell(row, 2).Value = group.TotalHours;
+                        worksheet.Cell(row, col1).Value = group.TotalHours;
                         row++;
                     }
                     foreach (var group in evenTermGrouped)
@@ -763,18 +793,18 @@ namespace ProfPlan.ViewModels
                         if (ind == -1)
                         {
                             worksheet.Cell(row, 1).Value = group.TypeOfWork;
-                            worksheet.Cell(row, 3).Value = group.TotalHours;
+                            worksheet.Cell(row, col2).Value = group.TotalHours;
                             row++;
                         }
                         else
                         {
-                            worksheet.Cell(ind + r, 3).Value = group.TotalHours;
+                            worksheet.Cell(ind + r, col2).Value = group.TotalHours;
                         }
 
                     }
 
 
-                    WorkWithWorkSheet(worksheet, row, r, IPList);
+                    WorkWithWorkSheet(worksheet, row, r, IPList, col1, col2, col3);
                 }
             });
 
