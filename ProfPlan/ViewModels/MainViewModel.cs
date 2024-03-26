@@ -618,7 +618,7 @@ namespace ProfPlan.ViewModels
                     break;
                 default:
                     _tabStripPlacement = Dock.Left;
-                    PlacementIcon = "ArrowLeft";// Default to Top if it's not any of the specified values
+                    PlacementIcon = "ArrowLeft";
                     break;
             }
             OnPropertyChanged(nameof(TabStripPlacement));
@@ -1078,7 +1078,7 @@ namespace ProfPlan.ViewModels
         private void CreateLoadCalcReport(object obj)
         {
             ReportViewModel loadCalcVM = new ReportViewModel();
-            loadCalcVM.CreateLoadCalc(SelectedComboBoxIndex);
+            _=loadCalcVM.CreateLoadCalcAsync(SelectedComboBoxIndex);
         }
         #endregion
 
@@ -1094,7 +1094,7 @@ namespace ProfPlan.ViewModels
         private void CreateIndividualPlanReport(object obj)
         {
             ReportViewModel loadCalcVM = new ReportViewModel();
-            loadCalcVM.CreateIndividualPlan(SelectedComboBoxIndex);
+            _=loadCalcVM.CreateIndividualPlan(SelectedComboBoxIndex);
         }
         #endregion
     }

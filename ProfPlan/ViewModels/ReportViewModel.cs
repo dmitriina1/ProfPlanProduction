@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,6 +28,17 @@ namespace ProfPlan.ViewModels
             wasCalc = true;
             SaveToExcel(TablesCollectionTeacherSum);
         }
+        public async Task CreateLoadCalcAsync(int index)
+        {
+            await Task.Run(() =>
+            {
+                SumAllTeachersTables(index);
+                wasCalc = true;
+                
+            });
+            SaveToExcel(TablesCollectionTeacherSum);
+        }
+
         private void SumAllTeachersTables(int index)
         {
             TablesCollectionTeacherSum = new ObservableCollection<TableCollection>();
@@ -584,178 +596,189 @@ namespace ProfPlan.ViewModels
         }
 
         //ИП Преподователей
-
-        public void CreateIndividualPlan(int index)
+        private List<IndividualPlan> CreateIPList(TableCollection tab, IXLWorkbook workbook)
         {
-            if(wasCalc == false)
-            {
-                SumAllTeachersTables(index);
-            }
-            var workbook = new XLWorkbook();
-            foreach(TableCollection tab in TablesCollectionTeacherSumList)
-            {
-                List<IndividualPlan> IPList = new List<IndividualPlan>();
-                int row = 1;
-                var worksheet = workbook.Worksheets.Add(tab.Tablename);
+            List<IndividualPlan> IPList = new List<IndividualPlan>();
+            //Перечень предметов
 
-               
-
-                //Перечень предметов
-                
-                foreach (ExcelModel excel in tab.ExcelData)
+            foreach (ExcelModel excel in tab.ExcelData)
+            {
+                if (excel.Total != 0 && excel.Total!=null)
                 {
-                    if(excel.Total != 0 && excel.Total!=null)
-                    {
-                        IPList.Add(excel.FormulateIndividualPlan());
-                        IPList[IPList.Count - 1].TypeOfWork = excel.GetTypeOfWork();
-                    }
+                    IPList.Add(excel.FormulateIndividualPlan());
+                    IPList[IPList.Count - 1].TypeOfWork = excel.GetTypeOfWork();
                 }
-                var groupedPlans = IPList.GroupBy(ip => new { ip.Discipline, ip.TypeOfWork, ip.Term, ip.Group, ip.GroupCount, ip.SubGroup, ip.Branch })
-                                    .Select(group => new IndividualPlan(
-                                        group.Key.Discipline,
-                                        group.Key.TypeOfWork,
-                                        group.Key.Term,
-                                        group.Key.Group,
-                                        group.Key.GroupCount,
-                                        group.Key.SubGroup,
-                                        group.Key.Branch,
-                                        group.Sum(ip => ip.Hours)
-                                    ))
-                                    .ToList();
+            }
+            var groupedPlans = IPList.GroupBy(ip => new { ip.Discipline, ip.TypeOfWork, ip.Term, ip.Group, ip.GroupCount, ip.SubGroup, ip.Branch })
+                                .Select(group => new IndividualPlan(
+                                    group.Key.Discipline,
+                                    group.Key.TypeOfWork,
+                                    group.Key.Term,
+                                    group.Key.Group,
+                                    group.Key.GroupCount,
+                                    group.Key.SubGroup,
+                                    group.Key.Branch,
+                                    group.Sum(ip => ip.Hours)
+                                ))
+                                .ToList();
 
-                IPList = groupedPlans;
-                IPList = IPList.OrderBy(ip => ip.Discipline)
-               .ThenBy(ip => ip.TypeOfWork)
-               .ThenBy(ip => ip.SubGroup)
-               .ThenBy(ip => ip.Group)
-               
-               .ToList();
-                //Итого
-                worksheet.Cell(row, 1).Value = "Виды учебных занятий (работ)";
-                worksheet.Cell(row, 2).Value = "нечетный семестр";
-                worksheet.Cell(row, 3).Value = "четный семестр";
-                worksheet.Cell(row, 4).Value = "Итого за уч.год";
-                row++;
-                int r, ind;
-                //var groupedByTypeOfWork = IPList.GroupBy(ip => new { ip.TypeOfWork, ip.Term });
-                //List<(string TypeOfWork, string Term, double? TotalHours)> resultList = new List<(string, string, double?)>();
+            IPList = groupedPlans;
+            IPList = IPList.OrderBy(ip => ip.Discipline)
+           .ThenBy(ip => ip.TypeOfWork)
+           .ThenBy(ip => ip.SubGroup)
+           .ThenBy(ip => ip.Group)
 
-                var evenTermList = IPList.Where(ip => ip.Term == "чет").ToList();
-                var oddTermList = IPList.Where(ip => ip.Term == "нечет").ToList();
+           .ToList();
+            return IPList;
+        }
+        public void WorkWithWorkSheet(IXLWorksheet worksheet, int row, int r, List<IndividualPlan> IPList)
+        {
+            double sum;
+            for (int i = r; i < row; i++)
+            {
+                var ranges = worksheet.Range(i, 2, i, 3);
+                sum = ranges.CellsUsed().Sum(cell => cell.GetDouble());
+                worksheet.Cell(i, 4).Value = sum;
+            }
+            worksheet.Cell(row, 1).Value = "Итого";
+            var range = worksheet.Range(2, 2, row - 1, 2);
+            sum = range.CellsUsed().Sum(cell => cell.GetDouble());
+            worksheet.Cell(row, 2).Value = sum;
+            range = worksheet.Range(2, 3, row - 1, 3);
+            sum = range.CellsUsed().Sum(cell => cell.GetDouble());
+            worksheet.Cell(row, 3).Value = sum;
+            range = worksheet.Range(2, 4, row - 1, 4);
+            sum = range.CellsUsed().Sum(cell => cell.GetDouble());
+            worksheet.Cell(row, 4).Value = sum;
 
-                // Группировка и подсчет суммы часов для каждого типа работы
-                var evenTermGrouped = evenTermList.GroupBy(ip => ip.TypeOfWork)
-                                                  .Select(group => new { TypeOfWork = group.Key, TotalHours = group.Sum(ip => ip.Hours) })
-                                                  .ToList();
-                var oddTermGrouped = oddTermList.GroupBy(ip => ip.TypeOfWork)
-                                                .Select(group => new { TypeOfWork = group.Key, TotalHours = group.Sum(ip => ip.Hours) })
-                                                .ToList();
-                r = row;
-                foreach (var group in oddTermGrouped)
+            row+=2;
+
+            //
+            worksheet.Cell(row, 1).Value = "Четный семестр";
+            row++;
+            worksheet.Cell(row, 1).Value = "Дисциплина";
+            worksheet.Cell(row, 2).Value = "Вид работы";
+            worksheet.Cell(row, 3).Value = "Группа";
+            worksheet.Cell(row, 4).Value = "Подгруппа";
+            worksheet.Cell(row, 5).Value = "Филиал";
+            worksheet.Cell(row, 6).Value = "Часы";
+            row++;
+            foreach (IndividualPlan ip in IPList)
+            {
+                if (ip.Term.IndexOf("нечет", StringComparison.OrdinalIgnoreCase) == -1)
                 {
-                    worksheet.Cell(row, 1).Value = group.TypeOfWork;
-                    worksheet.Cell(row, 2).Value = group.TotalHours;
+                    worksheet.Cell(row, 1).Value = ip.Discipline;
+                    worksheet.Cell(row, 2).Value = ip.TypeOfWork;
+                    worksheet.Cell(row, 3).Value = ip.Group;
+                    worksheet.Cell(row, 4).Value = ip.SubGroup;
+                    worksheet.Cell(row, 5).Value = ip.Branch;
+                    worksheet.Cell(row, 6).Value = ip.Hours;
                     row++;
                 }
-                foreach (var group in evenTermGrouped)
-                {
-                    ind = -1;
-                    foreach (var group2 in oddTermGrouped)
-                    {
-                        if(group.TypeOfWork == group2.TypeOfWork)
-                        {
-                            ind = oddTermGrouped.IndexOf(group2);
-                            break;
-                        }
-                    }
-                    if(ind == -1)
-                    {
-                        worksheet.Cell(row, 1).Value = group.TypeOfWork;
-                        worksheet.Cell(row, 3).Value = group.TotalHours;
-                        row++;
-                    }
-                    else
-                    {
-                        worksheet.Cell(ind + r, 3).Value = group.TotalHours;
-                    }
-                    
-                }
-
-                double sum;
-                    for (int i = r; i < row; i++)
-                    {
-                        var ranges = worksheet.Range(i, 2, i, 3);
-                        sum = ranges.CellsUsed().Sum(cell => cell.GetDouble());
-                        worksheet.Cell(i, 4).Value = sum;
-                    }
-                
-                worksheet.Cell(row, 1).Value = "Итого";
-                var range = worksheet.Range(2, 2, row - 1, 2);
-                sum = range.CellsUsed().Sum(cell => cell.GetDouble());
-                worksheet.Cell(row, 2).Value = sum;
-                range = worksheet.Range(2, 3, row - 1, 3);
-                sum = range.CellsUsed().Sum(cell => cell.GetDouble());
-                worksheet.Cell(row, 3).Value = sum;
-                range = worksheet.Range(2, 4, row - 1, 4);
-                sum = range.CellsUsed().Sum(cell => cell.GetDouble());
-                worksheet.Cell(row, 4).Value = sum;
-
-                row+=2;
-
-                //
-                worksheet.Cell(row, 1).Value = "Четный семестр";
-                row++;
-                worksheet.Cell(row, 1).Value = "Дисциплина";
-                worksheet.Cell(row, 2).Value = "Вид работы";
-                worksheet.Cell(row, 3).Value = "Группа";
-                worksheet.Cell(row, 4).Value = "Подгруппа";
-                worksheet.Cell(row, 5).Value = "Филиал";
-                worksheet.Cell(row, 6).Value = "Часы";
-                row++;
-                foreach (IndividualPlan ip in  IPList)
-                {
-                    if (ip.Term.IndexOf("нечет", StringComparison.OrdinalIgnoreCase) == -1)
-                    {
-                        worksheet.Cell(row, 1).Value = ip.Discipline;
-                        worksheet.Cell(row, 2).Value = ip.TypeOfWork;
-                        worksheet.Cell(row, 3).Value = ip.Group;
-                        worksheet.Cell(row, 4).Value = ip.SubGroup;
-                        worksheet.Cell(row, 5).Value = ip.Branch;
-                        worksheet.Cell(row, 6).Value = ip.Hours;
-                        row++;
-                    }
-                }
-                row+=2;
-
-                worksheet.Cell(row, 1).Value = "Нетный семестр";
-                row++;
-                worksheet.Cell(row, 1).Value = "Дисциплина";
-                worksheet.Cell(row, 2).Value = "Вид работы";
-                worksheet.Cell(row, 3).Value = "Группа";
-                worksheet.Cell(row, 4).Value = "Подгруппа";
-                worksheet.Cell(row, 5).Value = "Филиал";
-                worksheet.Cell(row, 6).Value = "Часы";
-                row++;
-                foreach (IndividualPlan ip in IPList)
-                {
-                    if (ip.Term.IndexOf("нечет", StringComparison.OrdinalIgnoreCase) != -1)
-                    {
-                        worksheet.Cell(row, 1).Value = ip.Discipline;
-                        worksheet.Cell(row, 2).Value = ip.TypeOfWork;
-                        worksheet.Cell(row, 3).Value = ip.Group;
-                        worksheet.Cell(row, 4).Value = ip.SubGroup;
-                        worksheet.Cell(row, 5).Value = ip.Branch;
-                        worksheet.Cell(row, 6).Value = ip.Hours;
-                        row++;
-                    }
-                }
-                worksheet.Columns().AdjustToContents();
-                worksheet.Rows().AdjustToContents();
             }
+            row+=2;
+
+            worksheet.Cell(row, 1).Value = "Нетный семестр";
+            row++;
+            worksheet.Cell(row, 1).Value = "Дисциплина";
+            worksheet.Cell(row, 2).Value = "Вид работы";
+            worksheet.Cell(row, 3).Value = "Группа";
+            worksheet.Cell(row, 4).Value = "Подгруппа";
+            worksheet.Cell(row, 5).Value = "Филиал";
+            worksheet.Cell(row, 6).Value = "Часы";
+            row++;
+            foreach (IndividualPlan ip in IPList)
+            {
+                if (ip.Term.IndexOf("нечет", StringComparison.OrdinalIgnoreCase) != -1)
+                {
+                    worksheet.Cell(row, 1).Value = ip.Discipline;
+                    worksheet.Cell(row, 2).Value = ip.TypeOfWork;
+                    worksheet.Cell(row, 3).Value = ip.Group;
+                    worksheet.Cell(row, 4).Value = ip.SubGroup;
+                    worksheet.Cell(row, 5).Value = ip.Branch;
+                    worksheet.Cell(row, 6).Value = ip.Hours;
+                    row++;
+                }
+            }
+            worksheet.Columns().AdjustToContents();
+            worksheet.Rows().AdjustToContents();
+        }
+        public async Task CreateIndividualPlan(int index)
+        {
+            var workbook = new XLWorkbook();
 
             directoryPath = GetSaveFilePathForIP();
             if (string.IsNullOrEmpty(directoryPath))
                 return;
+            await Task.Run(() =>
+            {
+                if (wasCalc == false)
+                {
+                    SumAllTeachersTables(index);
+                }
+                foreach (TableCollection tab in TablesCollectionTeacherSumList)
+                {
+                    List<IndividualPlan> IPList = CreateIPList(tab, workbook);
+                    int row = 1;
+                    var worksheet = workbook.Worksheets.Add(tab.Tablename);
+
+                    //Итого
+                    worksheet.Cell(row, 1).Value = "Виды учебных занятий (работ)";
+                    worksheet.Cell(row, 2).Value = "нечетный семестр";
+                    worksheet.Cell(row, 3).Value = "четный семестр";
+                    worksheet.Cell(row, 4).Value = "Итого за уч.год";
+                    row++;
+                    int r, ind;
+                    //var groupedByTypeOfWork = IPList.GroupBy(ip => new { ip.TypeOfWork, ip.Term });
+                    //List<(string TypeOfWork, string Term, double? TotalHours)> resultList = new List<(string, string, double?)>();
+
+                    var evenTermList = IPList.Where(ip => ip.Term == "чет").ToList();
+                    var oddTermList = IPList.Where(ip => ip.Term == "нечет").ToList();
+
+                    // Группировка и подсчет суммы часов для каждого типа работы
+                    var evenTermGrouped = evenTermList.GroupBy(ip => ip.TypeOfWork)
+                                                      .Select(group => new { TypeOfWork = group.Key, TotalHours = group.Sum(ip => ip.Hours) })
+                                                      .ToList();
+                    var oddTermGrouped = oddTermList.GroupBy(ip => ip.TypeOfWork)
+                                                    .Select(group => new { TypeOfWork = group.Key, TotalHours = group.Sum(ip => ip.Hours) })
+                                                    .ToList();
+                    r = row;
+                    foreach (var group in oddTermGrouped)
+                    {
+                        worksheet.Cell(row, 1).Value = group.TypeOfWork;
+                        worksheet.Cell(row, 2).Value = group.TotalHours;
+                        row++;
+                    }
+                    foreach (var group in evenTermGrouped)
+                    {
+                        ind = -1;
+                        foreach (var group2 in oddTermGrouped)
+                        {
+                            if (group.TypeOfWork == group2.TypeOfWork)
+                            {
+                                ind = oddTermGrouped.IndexOf(group2);
+                                break;
+                            }
+                        }
+                        if (ind == -1)
+                        {
+                            worksheet.Cell(row, 1).Value = group.TypeOfWork;
+                            worksheet.Cell(row, 3).Value = group.TotalHours;
+                            row++;
+                        }
+                        else
+                        {
+                            worksheet.Cell(ind + r, 3).Value = group.TotalHours;
+                        }
+
+                    }
+
+
+                    WorkWithWorkSheet(worksheet, row, r, IPList);
+                }
+            });
+
+            
             workbook.SaveAs(directoryPath);
         }
         private string GetSaveFilePathForIP()
