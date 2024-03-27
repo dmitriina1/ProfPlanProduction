@@ -1031,7 +1031,6 @@ namespace ProfPlan.ViewModels
                     list.DifferenceCalc();
                 }
                 TablesCollections.Add(new TableCollection(tabname, totallist));
-                
                 TablesCollections.SortTablesCollection();
                 UpdateListBoxItemsSource();
             }

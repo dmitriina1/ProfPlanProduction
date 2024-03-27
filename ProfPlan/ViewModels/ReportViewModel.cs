@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ProfPlan.Models;
 using ProfPlan.ViewModels.Base;
@@ -18,32 +19,53 @@ namespace ProfPlan.ViewModels
 {
     internal class ReportViewModel : ViewModel
     {
-        public ObservableCollection<TableCollection> TablesCollectionTeacherSum { get; set; }
-        private ObservableCollection<TableCollection> TablesCollectionTeacherSumList { get; set; }
+        public ObservableCollection<TableCollection> TablesCollectionTeacherSumP { get; set; }
+        private ObservableCollection<TableCollection> TablesCollectionTeacherSumListP { get; set; }
+        public ObservableCollection<TableCollection> TablesCollectionTeacherSumF { get; set; }
+        private ObservableCollection<TableCollection> TablesCollectionTeacherSumListF { get; set; }
         private bool wasCalc = false;
+        private int wasCalcIndex = -1;
 
-        public void CreateLoadCalc(int index)
-        {
-            SumAllTeachersTables(index);
-            wasCalc = true;
-            SaveToExcel(TablesCollectionTeacherSum);
-        }
+        //public void CreateLoadCalc(int index)
+        //{
+        //    SumAllTeachersTables(index);
+        //    wasCalc = true;
+        //    SaveToExcel(TablesCollectionTeacherSum);
+        //}
         public async Task CreateLoadCalcAsync(int index)
         {
+            string directoryPath = GetSaveFilePath();
+            if (string.IsNullOrEmpty(directoryPath))
+                return;
             await Task.Run(() =>
             {
                 SumAllTeachersTables(index);
                 wasCalc = true;
-                
+                wasCalcIndex = index;
+                if (index == 0)
+                    SaveToExcel(TablesCollectionTeacherSumP, directoryPath);
+                else
+                    SaveToExcel(TablesCollectionTeacherSumF, directoryPath);
+
             });
-            SaveToExcel(TablesCollectionTeacherSum);
+            
         }
 
         private void SumAllTeachersTables(int index)
         {
-            TablesCollectionTeacherSum = new ObservableCollection<TableCollection>();
+            if(index == 0)
+            {
+                TablesCollectionTeacherSumP = new ObservableCollection<TableCollection>();
 
-            TablesCollectionTeacherSumList = new ObservableCollection<TableCollection>();
+                TablesCollectionTeacherSumListP = new ObservableCollection<TableCollection>();
+            }
+            else
+            {
+                TablesCollectionTeacherSumF = new ObservableCollection<TableCollection>();
+
+                TablesCollectionTeacherSumListF = new ObservableCollection<TableCollection>();
+            }
+            
 
             foreach (var tableCollection in TablesCollections.GetTablesCollection())
             {
@@ -105,8 +127,11 @@ namespace ProfPlan.ViewModels
                         
                         if (bet!=null)
                         {
-                            ProcessBet(sumTableCollection, sumOddList, sumEvenList, bet, betPercent, autumnIndex, springIndex);
-                            TablesCollectionTeacherSum.Add(sumTableCollection);
+                            ProcessBet(index,sumTableCollection, sumOddList, sumEvenList, bet, betPercent, autumnIndex, springIndex);
+                            if(index == 0)
+                            TablesCollectionTeacherSumP.Add(sumTableCollection);
+                            else
+                            TablesCollectionTeacherSumF.Add(sumTableCollection);
                         }
                        
                     }
@@ -119,19 +144,28 @@ namespace ProfPlan.ViewModels
                                 sumTableCollection = new TableCollection($"{tableCollection.Tablename}");
                                 sumTableCollectionTwo = new TableCollection($"{tableCollection.Tablename} {betPercent - 1}");
 
-                                ProcessBet(sumTableCollection, sumOddList, sumEvenList, bet, betPercent, autumnIndex, springIndex);
-                                TablesCollectionTeacherSum.Add(sumTableCollection);
+                                ProcessBet(index,sumTableCollection, sumOddList, sumEvenList, bet, betPercent, autumnIndex, springIndex);
+                                if (index == 0)
+                                    TablesCollectionTeacherSumP.Add(sumTableCollection);
+                                else
+                                    TablesCollectionTeacherSumF.Add(sumTableCollection);
 
-                                ProcessBet(sumTableCollectionTwo, sumOddList, sumEvenList, bet*(betPercent - 1), betPercent, autumnIndex, springIndex);
-                                TablesCollectionTeacherSum.Add(sumTableCollectionTwo);
+                                ProcessBet(index,sumTableCollectionTwo, sumOddList, sumEvenList, bet*(betPercent - 1), betPercent, autumnIndex, springIndex);
+                                if (index == 0)
+                                    TablesCollectionTeacherSumP.Add(sumTableCollectionTwo);
+                                else
+                                    TablesCollectionTeacherSumF.Add(sumTableCollectionTwo);
                             }
                             else
                             {
                                     sumTableCollection = new TableCollection($"{tableCollection.Tablename} {betPercent}");
 
-                                    ProcessBet(sumTableCollection, sumOddList, sumEvenList, bet, betPercent, autumnIndex, springIndex);
-                                    TablesCollectionTeacherSum.Add(sumTableCollection);
-                                
+                                    ProcessBet(index,sumTableCollection, sumOddList, sumEvenList, bet, betPercent, autumnIndex, springIndex);
+                                    if (index == 0)
+                                        TablesCollectionTeacherSumP.Add(sumTableCollection);
+                                    else
+                                        TablesCollectionTeacherSumF.Add(sumTableCollection);
+
                             }
                         }
                         
@@ -145,7 +179,7 @@ namespace ProfPlan.ViewModels
         }
 
 
-        private TableCollection ProcessBet(TableCollection sumTableCollection, ObservableCollection<ExcelModel> sumOddList, ObservableCollection<ExcelModel> sumEvenList, double? bet, double? betPercent, double? autumnIndex = null, double? springIndex = null)
+        private TableCollection ProcessBet(int index, TableCollection sumTableCollection, ObservableCollection<ExcelModel> sumOddList, ObservableCollection<ExcelModel> sumEvenList, double? bet, double? betPercent, double? autumnIndex = null, double? springIndex = null)
         {
             TableCollection sumOddListOneBet = new TableCollection();
             TableCollection sumEvenListOneBet = new TableCollection();
@@ -233,7 +267,10 @@ namespace ProfPlan.ViewModels
             ExcelModel sumEvenOneBet = CalculateSum(sumEvenListOneBet, "чет");
             sumTableCollection.ExcelData.Add(sumOddOneBet);
             sumTableCollection.ExcelData.Add(sumEvenOneBet);
-            TablesCollectionTeacherSumList.Add(ListForIPPlan);
+            if(index == 0)
+            TablesCollectionTeacherSumListP.Add(ListForIPPlan);
+            else
+                TablesCollectionTeacherSumListF.Add(ListForIPPlan);
             return sumTableCollection;
         }
 
@@ -322,8 +359,6 @@ namespace ProfPlan.ViewModels
         }
 
 
-        private string directoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"Бланк нагрузки {DateTime.Today:dd-MM-yyyy}");
-
         private string GetSaveFilePath()
         {
             System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();
@@ -369,12 +404,8 @@ namespace ProfPlan.ViewModels
             return teacherName;
         }
 
-        public void SaveToExcel(ObservableCollection<TableCollection> tablesCollection)
+        public void SaveToExcel(ObservableCollection<TableCollection> tablesCollection, string directoryPath)
         {
-            directoryPath = GetSaveFilePath();
-            if (string.IsNullOrEmpty(directoryPath))
-                return;
-
             using (var workbook = new XLWorkbook())
             {
                 var fworksheet = workbook.Worksheets.Add("Бланк нагрузки");
@@ -631,29 +662,9 @@ namespace ProfPlan.ViewModels
            .ToList();
             return IPList;
         }
-        public void WorkWithWorkSheet(IXLWorksheet worksheet, int row, int r, List<IndividualPlan> IPList ,int col1, int col2, int col3)
+        public void WorkWithWorkSheet(IXLWorksheet worksheet, int row, List<IndividualPlan> IPList )
         {
-            double? sum;
-            for (int i = r; i < row; i++)
-            {
-                var range1 = string.IsNullOrEmpty(worksheet.Row(i).Cell(col1).Value.ToString()) ? 0 : Convert.ToDouble(worksheet.Row(i).Cell(col1).Value.ToString());
-                var range2 = string.IsNullOrEmpty(worksheet.Row(i).Cell(col2).Value.ToString()) ? 0 : Convert.ToDouble(worksheet.Row(i).Cell(col2).Value.ToString());
-                sum = Convert.ToDouble(range1) + Convert.ToDouble(range2);
-                worksheet.Cell(i, col3).Value = sum;
-            }
-            worksheet.Cell(row, 1).Value = "Итого";
-
-            var range = worksheet.Range(3, col1, row - 1, col1);
-            sum = range.CellsUsed().Sum(cell => cell.GetDouble());
-            worksheet.Cell(row, col1).Value = sum;
-            range = worksheet.Range(3, col2, row - 1, col2);
-            sum = range.CellsUsed().Sum(cell => cell.GetDouble());
-            worksheet.Cell(row, col2).Value = sum;
-            range = worksheet.Range(3, col3, row - 1, col3);
-            sum = range.CellsUsed().Sum(cell => cell.GetDouble());
-            worksheet.Cell(row, col3).Value = sum;
-
-            row+=2;
+            
 
             //
             worksheet.Cell(row, 1).Value = "Четный семестр";
@@ -705,24 +716,52 @@ namespace ProfPlan.ViewModels
             worksheet.Columns().AdjustToContents();
             worksheet.Rows().AdjustToContents();
         }
+        private ObservableCollection<List<IndividualPlan>> IPListP = new ObservableCollection<List<IndividualPlan>>(), IPListF = new ObservableCollection<List<IndividualPlan>>();
         public async Task CreateIndividualPlan(int index)
         {
             var workbook = new XLWorkbook();
 
-            directoryPath = GetSaveFilePathForIP();
+            string directoryPath = GetSaveFilePathForIP();
             if (string.IsNullOrEmpty(directoryPath))
                 return;
             await Task.Run(() =>
             {
-                if (wasCalc == false)
+                if (wasCalc == false && wasCalcIndex != index)
                 {
                     SumAllTeachersTables(index);
                 }
-                foreach (TableCollection tab in TablesCollectionTeacherSumList)
+                if(index == 0)
                 {
-                    List<IndividualPlan> IPList = CreateIPList(tab, workbook);
+                    SumAllTeachersTables(1);
+                }
+                else
+                {
+                    SumAllTeachersTables(0);
+                }
+                if(TablesCollectionTeacherSumListP!= null && TablesCollectionTeacherSumListP.Count>0)
+                foreach (TableCollection tab in TablesCollectionTeacherSumListP)
+                {
+                        IPListP.Add(CreateIPList(tab, workbook));
+                    }
+                if (TablesCollectionTeacherSumListF!=null && TablesCollectionTeacherSumListF.Count>0)
+                    foreach (TableCollection tab in TablesCollectionTeacherSumListF)
+                {
+                        IPListF.Add(CreateIPList(tab, workbook));
+                    }
+                ObservableCollection<TableCollection> SomeTab;
+                if (IPListF != null && IPListF.Count>0)
+                    SomeTab = TablesCollectionTeacherSumListF;
+                else
+                    SomeTab = TablesCollectionTeacherSumListP;
+                for (int i = 0;i< SomeTab.Count;i++)
+                {
                     int row = 1;
-                    var worksheet = workbook.Worksheets.Add(tab.Tablename);
+                    string tabName = SomeTab[i].Tablename;
+                    if (SomeTab[i].Tablename.StartsWith("П_") || SomeTab[i].Tablename.StartsWith("Ф_"))
+                    {
+                        tabName = SomeTab[i].Tablename.Substring(2); // Удаление "П_" или "Ф_" из начала строки
+                    }
+                    var worksheet = workbook.Worksheets.Add(tabName); 
 
                     //Итого
                     worksheet.Range(row, 1, row + 1, 1).Merge();
@@ -745,22 +784,9 @@ namespace ProfPlan.ViewModels
                     worksheet.Cell(row, 5).Value = "Факт";
 
                     row++;
-                    int r, ind;
-                    //var groupedByTypeOfWork = IPList.GroupBy(ip => new { ip.TypeOfWork, ip.Term });
-                    //List<(string TypeOfWork, string Term, double? TotalHours)> resultList = new List<(string, string, double?)>();
+                    int r = row;
 
-                    var evenTermList = IPList.Where(ip => ip.Term == "чет").ToList();
-                    var oddTermList = IPList.Where(ip => ip.Term == "нечет").ToList();
-
-                    // Группировка и подсчет суммы часов для каждого типа работы
-                    var evenTermGrouped = evenTermList.GroupBy(ip => ip.TypeOfWork)
-                                                      .Select(group => new { TypeOfWork = group.Key, TotalHours = group.Sum(ip => ip.Hours) })
-                                                      .ToList();
-                    var oddTermGrouped = oddTermList.GroupBy(ip => ip.TypeOfWork)
-                                                    .Select(group => new { TypeOfWork = group.Key, TotalHours = group.Sum(ip => ip.Hours) })
-                                                    .ToList();
-                    r = row;
-                    int col1,col2, col3;
+                    int col1, col2, col3;
                     if (index == 0)
                     {
                         col1 = 2;
@@ -773,44 +799,123 @@ namespace ProfPlan.ViewModels
                         col2 = 5;
                         col3 = 7;
                     }
-                    foreach (var group in oddTermGrouped)
+                    //var groupedByTypeOfWork = IPList.GroupBy(ip => new { ip.TypeOfWork, ip.Term });
+                    //List<(string TypeOfWork, string Term, double? TotalHours)> resultList = new List<(string, string, double?)>();
+                    if (IPListF.Count>0 && IPListP.Count>0)
                     {
-                        worksheet.Cell(row, 1).Value = group.TypeOfWork;
-                        worksheet.Cell(row, col1).Value = group.TotalHours;
-                        row++;
+                        col1 = 2;
+                        col2 = 4;
+                        col3 = 6;
+                        CreateTotal(IPListP[i], index, r, ref row, worksheet, col1, col2, col3);
+                        col1 = 3;
+                        col2 = 5;
+                        col3 = 7;
+                        CreateTotal(IPListF[i], index, r, ref row, worksheet, col1, col2, col3);
+                        SumAllTables(worksheet, row, r);
+                        row+=2;
+
+                        WorkWithWorkSheet(worksheet, row, IPListF[i]);
                     }
-                    foreach (var group in evenTermGrouped)
+                    else if (IPListF.Count>0)
                     {
-                        ind = -1;
-                        foreach (var group2 in oddTermGrouped)
-                        {
-                            if (group.TypeOfWork == group2.TypeOfWork)
-                            {
-                                ind = oddTermGrouped.IndexOf(group2);
-                                break;
-                            }
-                        }
-                        if (ind == -1)
-                        {
-                            worksheet.Cell(row, 1).Value = group.TypeOfWork;
-                            worksheet.Cell(row, col2).Value = group.TotalHours;
-                            row++;
-                        }
-                        else
-                        {
-                            worksheet.Cell(ind + r, col2).Value = group.TotalHours;
-                        }
+                        CreateTotal(IPListF[i], index, r, ref row, worksheet, col1, col2, col3);
+                        SumTables(worksheet, row, r, col1, col2, col3);
+                        row+=2;
 
+                        WorkWithWorkSheet(worksheet, row, IPListF[i]);
                     }
+                    else
+                    {
+                        CreateTotal(IPListP[i], index, r, ref row, worksheet, col1, col2, col3);
+                        SumTables(worksheet, row, r, col1, col2, col3);
+                        row+=2;
 
+                        WorkWithWorkSheet(worksheet, row, IPListP[i]);
+                    }
+                    
 
-                    WorkWithWorkSheet(worksheet, row, r, IPList, col1, col2, col3);
+                     
                 }
             });
 
             
             workbook.SaveAs(directoryPath);
         }
+        private void CreateTotal(List<IndividualPlan> IPList, int index, int r, ref int row, IXLWorksheet worksheet, int col1, int col2, int col3)
+        {
+            int ind;
+            var evenTermList = IPList.Where(ip => ip.Term == "чет").ToList();
+            var oddTermList = IPList.Where(ip => ip.Term == "нечет").ToList();
+
+            // Группировка и подсчет суммы часов для каждого типа работы
+            var evenTermGrouped = evenTermList.GroupBy(ip => ip.TypeOfWork)
+                                              .Select(group => new { TypeOfWork = group.Key, TotalHours = group.Sum(ip => ip.Hours) })
+                                              .ToList();
+            var oddTermGrouped = oddTermList.GroupBy(ip => ip.TypeOfWork)
+                                            .Select(group => new { TypeOfWork = group.Key, TotalHours = group.Sum(ip => ip.Hours) })
+                                            .ToList();
+            
+            
+            foreach (var group in oddTermGrouped)
+            {
+                var existingRow = worksheet.RowsUsed().FirstOrDefault(s => s.Cell(1).Value.ToString() == group.TypeOfWork);
+                if (existingRow == null)
+                {
+                    worksheet.Cell(row, 1).Value = group.TypeOfWork;
+                    worksheet.Cell(row, col1).Value = group.TotalHours;
+                    row++;
+                }
+                else
+                {
+                    existingRow.Cell(col1).Value = group.TotalHours;
+                }
+            }
+            foreach (var group in evenTermGrouped)
+            {
+                var existingRow = worksheet.RowsUsed().FirstOrDefault(s => s.Cell(1).Value.ToString() == group.TypeOfWork);
+                if (existingRow == null)
+                {
+                    worksheet.Cell(row, 1).Value = group.TypeOfWork;
+                    worksheet.Cell(row, col2).Value = group.TotalHours;
+                    row++;
+                }
+                else
+                {
+                    existingRow.Cell(col2).Value = group.TotalHours;
+                }
+
+            }
+        }
+        private void SumTables(IXLWorksheet worksheet, int row, int r, int col1, int col2, int col3)
+        {
+            double? sum;
+            for (int i = r; i < row; i++)
+            {
+                var range1 = string.IsNullOrEmpty(worksheet.Row(i).Cell(col1).Value.ToString()) ? 0 : Convert.ToDouble(worksheet.Row(i).Cell(col1).Value.ToString());
+                var range2 = string.IsNullOrEmpty(worksheet.Row(i).Cell(col2).Value.ToString()) ? 0 : Convert.ToDouble(worksheet.Row(i).Cell(col2).Value.ToString());
+                sum = Convert.ToDouble(range1) + Convert.ToDouble(range2);
+                worksheet.Cell(i, col3).Value = sum;
+            }
+            worksheet.Cell(row, 1).Value = "Итого";
+            //MessageBox.Show(worksheet.Cell(3, col1).Value.ToString());
+            //MessageBox.Show(worksheet.Cell(row, col1).Value.ToString());
+            var range = worksheet.Range(3, col1, row, col1);
+            sum = range.CellsUsed().Sum(cell => cell.GetDouble());
+            worksheet.Cell(row, col1).Value = sum;
+            range = worksheet.Range(3, col2, row, col2);
+            sum = range.CellsUsed().Sum(cell => cell.GetDouble());
+            worksheet.Cell(row, col2).Value = sum;
+            range = worksheet.Range(3, col3, row, col3);
+            sum = range.CellsUsed().Sum(cell => cell.GetDouble());
+            worksheet.Cell(row, col3).Value = sum;
+        }
+
+        private void SumAllTables(IXLWorksheet worksheet, int row, int r)
+        {
+            SumTables(worksheet, row, r, 2, 4, 6);
+            SumTables(worksheet, row, r, 3, 5, 7);
+        }
+
         private string GetSaveFilePathForIP()
         {
             System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();

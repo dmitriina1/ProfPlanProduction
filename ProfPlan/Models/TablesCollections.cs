@@ -28,7 +28,6 @@ namespace ProfPlan.Models
         public static void Add(TableCollection tabCol)
         {
             int foundIndex = GetTableIndexByName(tabCol.Tablename);
-
             if (foundIndex != -1)
             {
                 TablesCollection[foundIndex] = tabCol;
@@ -106,7 +105,7 @@ namespace ProfPlan.Models
             
                 for (int i = 0; i < TablesCollections.TablesCollection.Count; i++)
                 {
-                    if (TablesCollections.TablesCollection[i].Tablename.IndexOf(tableName, StringComparison.OrdinalIgnoreCase) != -1)
+                    if (string.Equals(TablesCollections.TablesCollection[i].Tablename, tableName, StringComparison.OrdinalIgnoreCase))
                     {
                         return i; // Возвращаем индекс, если таблица найдена
                     }
