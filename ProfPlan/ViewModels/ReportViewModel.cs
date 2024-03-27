@@ -246,18 +246,19 @@ namespace ProfPlan.ViewModels
             }
             DeleteItemsFromObsCol(ref sumEvenList, sumEvenListOneBet);
 
-            //List<int> lists = new List<int>();
+            //List<string> lists = new List<string>();
             //for (int i = 0; i<sumOddListOneBet.ExcelData.Count; i++)
             //{
-            //    lists.Add((sumOddListOneBet.ExcelData[i] as ExcelModel).Number);
+            //    lists.Add(($"{(sumOddListOneBet.ExcelData[i] as ExcelModel).Discipline} - {(sumOddListOneBet.ExcelData[i] as ExcelModel).Group}  - {(sumOddListOneBet.ExcelData[i] as ExcelModel).Total}"));
             //}
-            //MessageBox.Show($"{sumTableCollection.Tablename}{string.Join(", ", lists)}");
+            //MessageBox.Show($"{sumTableCollection.Tablename}{string.Join("\n ", lists)}");
             //lists.Clear();
             //for (int i = 0; i<sumEvenListOneBet.ExcelData.Count; i++)
             //{
-            //    lists.Add((sumEvenListOneBet.ExcelData[i] as ExcelModel).Number);
+            //    lists.Add(($"{(sumEvenListOneBet.ExcelData[i] as ExcelModel).Discipline} - {(sumEvenListOneBet.ExcelData[i] as ExcelModel).Group}  - {(sumEvenListOneBet.ExcelData[i] as ExcelModel).Total}"));
             //}
-            //MessageBox.Show($"{sumTableCollection.Tablename}{string.Join(", ", lists)}");
+            //MessageBox.Show($"{sumTableCollection.Tablename}{string.Join("\n ", lists)}");
+
 
             ExcelModel sumOddOneBet = CalculateSum(sumOddListOneBet, "нечет");
             ExcelModel sumEvenOneBet = CalculateSum(sumEvenListOneBet, "чет");
