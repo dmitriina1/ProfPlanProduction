@@ -127,7 +127,7 @@ namespace ProfPlan.ViewModels
                         
                         if (bet!=null)
                         {
-                            ProcessBet(index,sumTableCollection, sumOddList, sumEvenList, bet, betPercent, autumnIndex, springIndex);
+                            ProcessBet(index,sumTableCollection,ref sumOddList,ref sumEvenList, bet, betPercent, autumnIndex, springIndex);
                             if(index == 0)
                             TablesCollectionTeacherSumP.Add(sumTableCollection);
                             else
@@ -144,13 +144,13 @@ namespace ProfPlan.ViewModels
                                 sumTableCollection = new TableCollection($"{tableCollection.Tablename}");
                                 sumTableCollectionTwo = new TableCollection($"{tableCollection.Tablename} {betPercent - 1}");
 
-                                ProcessBet(index,sumTableCollection, sumOddList, sumEvenList, bet, betPercent, autumnIndex, springIndex);
+                                ProcessBet(index,sumTableCollection,ref sumOddList,ref sumEvenList, bet, betPercent, autumnIndex, springIndex);
                                 if (index == 0)
                                     TablesCollectionTeacherSumP.Add(sumTableCollection);
                                 else
                                     TablesCollectionTeacherSumF.Add(sumTableCollection);
 
-                                ProcessBet(index,sumTableCollectionTwo, sumOddList, sumEvenList, bet*(betPercent - 1), betPercent, autumnIndex, springIndex);
+                                ProcessBet(index,sumTableCollectionTwo,ref sumOddList,ref sumEvenList, bet*(betPercent - 1), betPercent, autumnIndex, springIndex);
                                 if (index == 0)
                                     TablesCollectionTeacherSumP.Add(sumTableCollectionTwo);
                                 else
@@ -160,7 +160,7 @@ namespace ProfPlan.ViewModels
                             {
                                     sumTableCollection = new TableCollection($"{tableCollection.Tablename} {betPercent}");
 
-                                    ProcessBet(index,sumTableCollection, sumOddList, sumEvenList, bet, betPercent, autumnIndex, springIndex);
+                                    ProcessBet(index,sumTableCollection,ref sumOddList,ref sumEvenList, bet, betPercent, autumnIndex, springIndex);
                                     if (index == 0)
                                         TablesCollectionTeacherSumP.Add(sumTableCollection);
                                     else
@@ -179,7 +179,7 @@ namespace ProfPlan.ViewModels
         }
 
 
-        private TableCollection ProcessBet(int index, TableCollection sumTableCollection, ObservableCollection<ExcelModel> sumOddList, ObservableCollection<ExcelModel> sumEvenList, double? bet, double? betPercent, double? autumnIndex = null, double? springIndex = null)
+        private TableCollection ProcessBet(int index, TableCollection sumTableCollection,ref ObservableCollection<ExcelModel> sumOddList,ref ObservableCollection<ExcelModel> sumEvenList, double? bet, double? betPercent, double? autumnIndex = null, double? springIndex = null)
         {
             TableCollection sumOddListOneBet = new TableCollection();
             TableCollection sumEvenListOneBet = new TableCollection();
@@ -194,26 +194,17 @@ namespace ProfPlan.ViewModels
             {
                 betValue = bet * autumnIndex * betPercent;
             }
-            foreach (ExcelModel excelModel in sumOddList)
+            var sortedList = sumOddList.OrderByDescending(x => x.SumProperties());
+
+            foreach (ExcelModel excelModel in sortedList)
             {
-                if (betValue>sum)
+                if (betValue > sum)
                 {
-                    dif=betValue - sum;
-                    if (dif > excelModel.SumProperties())
+                    dif = betValue - sum;
+                    // Если разница между betValue и текущей суммой больше или равна свойству SumProperties
+                    if (dif >= excelModel.SumProperties())
                     {
-                        sum+=excelModel.SumProperties();
-                        sumOddListOneBet.ExcelData.Add(excelModel);
-                        ListForIPPlan.ExcelData.Add(excelModel);
-                    }
-                    else if(min>excelModel.SumProperties() && sumOddList.IndexOf(excelModel) != sumOddList.Count - 1)
-                    {
-                        min = excelModel.SumProperties();
-                    }
-                    else if(sumOddList.IndexOf(excelModel) == sumOddList.Count - 1)
-                    {
-                        if (min == null)
-                            min = 0;
-                        sum+=min;
+                        sum += excelModel.SumProperties();
                         sumOddListOneBet.ExcelData.Add(excelModel);
                         ListForIPPlan.ExcelData.Add(excelModel);
                     }
@@ -223,7 +214,7 @@ namespace ProfPlan.ViewModels
                     break;
                 }
             }
-            DeleteItemsFromObsCol(sumOddList, sumOddListOneBet.ExcelData.Count-1);
+            DeleteItemsFromObsCol(ref sumOddList, sumOddListOneBet);
             
             sum = 0;
             min = null;
@@ -232,26 +223,18 @@ namespace ProfPlan.ViewModels
             {
                 betValue = bet * springIndex * betPercent;
             }
-            foreach (ExcelModel excelModel in sumEvenList)
+
+            sortedList = sumEvenList.OrderByDescending(x => x.SumProperties());
+
+            foreach (ExcelModel excelModel in sortedList)
             {
-                if (betValue>sum)
+                if (betValue > sum)
                 {
-                    dif=betValue - sum;
-                    if (dif > excelModel.SumProperties())
+                    dif = betValue - sum;
+                    // Если разница между betValue и текущей суммой больше или равна свойству SumProperties
+                    if (dif >= excelModel.SumProperties())
                     {
                         sum += excelModel.SumProperties();
-                        sumEvenListOneBet.ExcelData.Add(excelModel);
-                        ListForIPPlan.ExcelData.Add(excelModel);
-                    }
-                    else if (min>excelModel.SumProperties() && sumOddList.IndexOf(excelModel) != sumOddList.Count - 1)
-                    {
-                        min = excelModel.SumProperties();
-                    }
-                    else if (sumEvenList.IndexOf(excelModel) == sumEvenList.Count - 1)
-                    {
-                        if (min == null)
-                            min = 0;
-                        sum+=min;
                         sumEvenListOneBet.ExcelData.Add(excelModel);
                         ListForIPPlan.ExcelData.Add(excelModel);
                     }
@@ -261,8 +244,21 @@ namespace ProfPlan.ViewModels
                     break;
                 }
             }
+            DeleteItemsFromObsCol(ref sumEvenList, sumEvenListOneBet);
 
-            DeleteItemsFromObsCol(sumEvenList, sumEvenListOneBet.ExcelData.Count-1);
+            //List<int> lists = new List<int>();
+            //for (int i = 0; i<sumOddListOneBet.ExcelData.Count; i++)
+            //{
+            //    lists.Add((sumOddListOneBet.ExcelData[i] as ExcelModel).Number);
+            //}
+            //MessageBox.Show($"{sumTableCollection.Tablename}{string.Join(", ", lists)}");
+            //lists.Clear();
+            //for (int i = 0; i<sumEvenListOneBet.ExcelData.Count; i++)
+            //{
+            //    lists.Add((sumEvenListOneBet.ExcelData[i] as ExcelModel).Number);
+            //}
+            //MessageBox.Show($"{sumTableCollection.Tablename}{string.Join(", ", lists)}");
+
             ExcelModel sumOddOneBet = CalculateSum(sumOddListOneBet, "нечет");
             ExcelModel sumEvenOneBet = CalculateSum(sumEvenListOneBet, "чет");
             sumTableCollection.ExcelData.Add(sumOddOneBet);
@@ -350,11 +346,11 @@ namespace ProfPlan.ViewModels
         }
 
 
-        private void DeleteItemsFromObsCol(ObservableCollection<ExcelModel> collection, int indexToRemoveUpTo)
+        private void DeleteItemsFromObsCol(ref ObservableCollection<ExcelModel> collection, TableCollection tabCol)
         {
-            for (int i = 0; i <= indexToRemoveUpTo && collection.Count > 0; i++)
+            foreach(ExcelModel tab in tabCol)
             {
-                collection.RemoveAt(0);
+                collection.Remove(tab);
             }
         }
 
