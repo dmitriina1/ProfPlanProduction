@@ -29,7 +29,6 @@ namespace ProfPlan.ViewModels
             ExcelModel.UpdateSharedTeachers();
         }
 
-        private string directoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"Расчет нагрузки {DateTime.Today:dd-MM-yyyy}");
         private string filePath = "", tempFilePath = "";
         private int Number = 1;
         private DataTableCollection tableCollection;
@@ -52,18 +51,26 @@ namespace ProfPlan.ViewModels
             filePath = GetExcelFilePath();
             if (!string.IsNullOrEmpty(filePath))
             {
-                tableCollection = ReadExcelData(filePath).Tables;
-                TablesCollections.Clear();
-                foreach (DataTable table in tableCollection)
-                {
-                    ProcessDataTable(table);
-                }
-                OnPropertyChanged(nameof(TablesCollections));
-                UpdateListBoxItemsSource();
+                LoadDataAsync();
             }
 
         }
-
+        private async Task LoadDataAsync()
+        {
+            await Task.Run(() =>
+            {
+                
+                    tableCollection = ReadExcelData(filePath).Tables;
+                    TablesCollections.Clear();
+                    foreach (DataTable table in tableCollection)
+                    {
+                        ProcessDataTable(table);
+                    }
+                    OnPropertyChanged(nameof(TablesCollections));
+                    UpdateListBoxItemsSource();
+                
+            });
+        }
         private string GetExcelFilePath()
         {
             var openFileDialog = new OpenFileDialog() { Filter = "Excel Files|*.xls;*.xlsx" };
@@ -87,7 +94,6 @@ namespace ProfPlan.ViewModels
 
         private void ProcessDataTable(DataTable table)
         {
-            Number = 1;
             string tabname = table.TableName;
             ObservableCollection<ExcelData> list = new ObservableCollection<ExcelData>();
             int rowIndex = -1;
@@ -156,7 +162,7 @@ namespace ProfPlan.ViewModels
                         if (haveTeacher && !string.IsNullOrWhiteSpace(table.Rows[i][0].ToString()))
                         {
                             list.Add(new ExcelModel(
-                                                   Number,
+                                                   Convert.ToInt32(table.Rows[i][0].ToString()),
                                                    table.Rows[i][1].ToString(),
                                                    table.Rows[i][2].ToString(),
                                                    table.Rows[i][3].ToString(),
@@ -190,7 +196,7 @@ namespace ProfPlan.ViewModels
                         else if (!haveTeacher)
                         {
                             list.Add(new ExcelModel(
-                                                   Number,
+                                                   Convert.ToInt32(table.Rows[i][0].ToString()),
                                                    "",
                                                    table.Rows[i][1].ToString(),
                                                    table.Rows[i][2].ToString(),
@@ -299,12 +305,12 @@ namespace ProfPlan.ViewModels
             if (!string.IsNullOrEmpty(tempFilePath))
             {
                 tableCollection = ReadExcelData(tempFilePath).Tables;
-                
+
                 if (tableCollection.Count == 1)
                 {
                     if (_selectedComboBoxIndex == 0)
                         tableCollection[0].TableName = "П_ПИиИС";
-                    else if(_selectedComboBoxIndex == 1)
+                    else if (_selectedComboBoxIndex == 1)
                         tableCollection[0].TableName = "Ф_ПИиИС";
                     foreach (DataTable table in tableCollection)
                     {
@@ -317,11 +323,9 @@ namespace ProfPlan.ViewModels
                 {
                     MessageBox.Show("Ошибка! Можно добавить лишь 1 таблицу!");
                 }
-                
             }
 
         }
-
         private void DataTableInsert(DataTable table)
         {
             int ind = -1;
@@ -598,32 +602,40 @@ namespace ProfPlan.ViewModels
         }
         private void SelectTabItemsPlacement(object parameter)
         {
-            switch (_tabStripPlacement)
-            {
-                case Dock.Top:
-                    _tabStripPlacement = Dock.Right;
-                    PlacementIcon = "ArrowRight";
-                    break;
-                case Dock.Right:
-                    _tabStripPlacement = Dock.Bottom;
-                    PlacementIcon = "ArrowDown";
-                    break;
-                case Dock.Bottom:
-                    _tabStripPlacement = Dock.Left;
-                    PlacementIcon = "ArrowLeft";
-                    break;
-                case Dock.Left:
-                    _tabStripPlacement = Dock.Top;
-                    PlacementIcon = "ArrowUp";
-                    break;
-                default:
-                    _tabStripPlacement = Dock.Left;
-                    PlacementIcon = "ArrowLeft";
-                    break;
-            }
-            OnPropertyChanged(nameof(TabStripPlacement));
-            OnPropertyChanged(nameof(PlacementIcon));
+            SelectTabItemsPlacementAsync();
+            
         }
+        private async Task SelectTabItemsPlacementAsync()
+        {
+            await Task.Run(() =>
+            {
+                switch (_tabStripPlacement)
+                {
+                    case Dock.Top:
+                        _tabStripPlacement = Dock.Right;
+                        PlacementIcon = "ArrowRight";
+                        break;
+                    case Dock.Right:
+                        _tabStripPlacement = Dock.Bottom;
+                        PlacementIcon = "ArrowDown";
+                        break;
+                    case Dock.Bottom:
+                        _tabStripPlacement = Dock.Left;
+                        PlacementIcon = "ArrowLeft";
+                        break;
+                    case Dock.Left:
+                        _tabStripPlacement = Dock.Top;
+                        PlacementIcon = "ArrowUp";
+                        break;
+                    default:
+                        _tabStripPlacement = Dock.Left;
+                        PlacementIcon = "ArrowLeft";
+                        break;
+                }
+                OnPropertyChanged(nameof(TabStripPlacement));
+                OnPropertyChanged(nameof(PlacementIcon));
+            });
+            }
         #endregion
 
         // Сохраение Расчета нагрузки
@@ -638,14 +650,16 @@ namespace ProfPlan.ViewModels
 
         private void SaveToExcel(object parameter)
         {
-            if(filePath.EndsWith(".xls", StringComparison.OrdinalIgnoreCase) == false || filePath == "")
+            if(filePath.EndsWith(".xls", StringComparison.OrdinalIgnoreCase) == true || filePath == "")
                 SaveToExcelAs();
             else
             SaveToExcels(TablesCollections.GetTablesCollection());
         }
 
-        private void SaveToExcels(ObservableCollection<TableCollection> tablesCollection)
+        private async Task SaveToExcels(ObservableCollection<TableCollection> tablesCollection)
         {
+            await Task.Run(() =>
+            {
             using (var workbook = new XLWorkbook())
             {
                 foreach (var table in tablesCollection)
@@ -655,14 +669,14 @@ namespace ProfPlan.ViewModels
                 }
                 int frow = 2;
                 List<string> newPropertyNames = new List<string>
-    {
-        "№","Преподаватель", "Дисциплина","Семестр(четный или нечетный)","Группа","Институт","Число групп","Подгруппа","Форма обучения","Число студентов","Из них коммерч.","Недель","Форма отчетности","Лекции",  "Практики","Лабораторные","Консультации", "Зачеты", "Экзамены", "Курсовые работы", "Курсовые проекты",  "ГЭК+ПриемГЭК, прием ГАК",
-        "Диплом","РГЗ_Реф, нормоконтроль","ПрактикаРабота, реценз диплом", "Прочее", "Всего","Бюджетные","Коммерческие"
-    };
+                {
+                    "№", "Преподаватель", "Дисциплина", "Семестр(четный или нечетный)", "Группа", "Институт", "Число групп", "Подгруппа", "Форма обучения", "Число студентов", "Из них коммерч.", "Недель", "Форма отчетности", "Лекции", "Практики", "Лабораторные", "Консультации", "Зачеты", "Экзамены", "Курсовые работы", "Курсовые проекты", "ГЭК+ПриемГЭК, прием ГАК",
+                    "Диплом", "РГЗ_Реф, нормоконтроль", "ПрактикаРабота, реценз диплом", "Прочее", "Всего", "Бюджетные", "Коммерческие"
+                };
                 List<string> newPropertyTotalNames = new List<string>
-    {
-        "ФИО","Ставка", "Ставка(%)","Всего","Осень","Весна","Разница"
-    };
+                {
+                    "ФИО", "Ставка", "Ставка(%)", "Всего", "Осень", "Весна", "Разница"
+                };
                 foreach (var worksheet in workbook.Worksheets)
                 {
                     if (worksheet.Name.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) == -1)
@@ -690,8 +704,10 @@ namespace ProfPlan.ViewModels
                 }
 
 
+
                 SaveWorkbook(workbook);
             }
+            });
         }
 
         private IXLWorksheet CreateWorksheet(XLWorkbook workbook, TableCollection table)
@@ -762,7 +778,7 @@ namespace ProfPlan.ViewModels
 
         private void SaveWorkbook(XLWorkbook workbook)
         {
-            workbook.SaveAs(directoryPath);
+            workbook.SaveAs(filePath);
         }
 
         public ICommand SaveDataAsCommand
@@ -775,7 +791,7 @@ namespace ProfPlan.ViewModels
             SaveToExcelAs();
         }
 
-        private void SaveToExcelAs()
+        private async Task SaveToExcelAs()
         {
             System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             saveFileDialog.Filter = "Excel files (*.xlsx)|*.xlsx|All files (*.*)|*.*";
@@ -786,13 +802,15 @@ namespace ProfPlan.ViewModels
 
             if (result == System.Windows.Forms.DialogResult.OK)
             {
-                directoryPath = saveFileDialog.FileName;
+                filePath = saveFileDialog.FileName;
+
             }
             else
             {
                 return;
             }
-            SaveToExcels(TablesCollections.GetTablesCollection());
+            await Task.Run(()=>
+            SaveToExcels(TablesCollections.GetTablesCollection()));
         }
 
         #endregion
@@ -823,17 +841,21 @@ namespace ProfPlan.ViewModels
         {
             CreateTableCollection();
         }
-        private void CreateTableCollection()
+        private async Task CreateTableCollection()
         {
-            if (SelectedComboBoxIndex == 0 && TablesCollections.GetTableByName("ПИиИС", SelectedComboBoxIndex) == false)
+            await Task.Run(() =>
             {
-                TablesCollections.Add(new TableCollection() { Tablename = "П_ПИиИС" });
-            }
-            else if (SelectedComboBoxIndex == 1 && TablesCollections.GetTableByName("ПИиИС", SelectedComboBoxIndex) == false)
-            {
-                TablesCollections.Add(new TableCollection() { Tablename = "Ф_ПИиИС" });
-            }
-            UpdateListBoxItemsSource();
+                if (SelectedComboBoxIndex == 0 && TablesCollections.GetTableByName("ПИиИС", SelectedComboBoxIndex) == false)
+                {
+                    TablesCollections.Add(new TableCollection() { Tablename = "П_ПИиИС" });
+                }
+                else if (SelectedComboBoxIndex == 1 && TablesCollections.GetTableByName("ПИиИС", SelectedComboBoxIndex) == false)
+                {
+                    TablesCollections.Add(new TableCollection() { Tablename = "Ф_ПИиИС" });
+                }
+                UpdateListBoxItemsSource();
+            });
+            
         }
         #endregion
 
@@ -872,68 +894,74 @@ namespace ProfPlan.ViewModels
 
         private void MoveTeachers(object parameter)
         {
-            int ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
-            int stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
-            if (ftableindex != -1 && stableindex != -1)
+            MoveTeachers();
+        }
+        private async Task MoveTeachers()
+        {
+            await Task.Run(() =>
             {
-                try
+                int ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
+                int stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
+                if (ftableindex != -1 && stableindex != -1)
                 {
-                    if (TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count != 0)
+                    try
                     {
-                        for (int i = 0; i < TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count; i++)
+                        if (TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count != 0)
                         {
-                            if (TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] is ExcelModel excelModel && excelModel.Teacher == "")
+                            for (int i = 0; i < TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count; i++)
                             {
-                                ExcelModel stableData = TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] as ExcelModel;
-                                ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
-
-                                if (stableData != null && ftableData != null &&
-                                    stableData.Term == ftableData.Term &&
-                                    stableData.Group == ftableData.Group &&
-                                    stableData.Institute == ftableData.Institute &&
-                                    stableData.FormOfStudy == ftableData.FormOfStudy &&
-                                    ftableData.Teacher != "")
+                                if (TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] is ExcelModel excelModel && excelModel.Teacher == "")
                                 {
-                                    stableData.Teacher = ftableData.Teacher;
+                                    ExcelModel stableData = TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] as ExcelModel;
+                                    ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
+
+                                    if (stableData != null && ftableData != null &&
+                                        stableData.Term == ftableData.Term &&
+                                        stableData.Group == ftableData.Group &&
+                                        stableData.Institute == ftableData.Institute &&
+                                        stableData.FormOfStudy == ftableData.FormOfStudy &&
+                                        ftableData.Teacher != "")
+                                    {
+                                        stableData.Teacher = ftableData.Teacher;
+                                    }
                                 }
                             }
                         }
-                    }
-                    else
-                    {
-                        MessageBox.Show("Лист Факт пустой! Поэтому данные с листа План были скопированы");
-                        CreateTableCollectionsForMove();
-                        ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
-                        stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
-                        for (int i = 0; i < TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count; i++)
+                        else
                         {
-                            ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
-                            TablesCollections.AddByIndex(stableindex, ftableData);
+                            MessageBox.Show("Лист Факт пустой! Поэтому данные с листа План были скопированы");
+                            CreateTableCollectionsForMove();
+                            ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
+                            stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
+                            for (int i = 0; i < TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count; i++)
+                            {
+                                ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
+                                TablesCollections.AddByIndex(stableindex, ftableData);
+                            }
                         }
+
                     }
+                    catch
+                    {
 
+                    }
                 }
-                catch
+                else
                 {
-
+                    MessageBox.Show("Лист Факт пустой! Поэтому данные с листа План были скопированы");
+                    CreateTableCollectionsForMove();
+                    ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
+                    stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
+                    for (int i = 0; i < TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count; i++)
+                    {
+                        ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
+                        TablesCollections.AddByIndex(stableindex, ftableData);
+                    }
                 }
+                SelectedTable = null;
+                UpdateListBoxItemsSource();
+            });
             }
-            else
-            {
-                MessageBox.Show("Лист Факт пустой! Поэтому данные с листа План были скопированы");
-                CreateTableCollectionsForMove();
-                ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
-                stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
-                for (int i = 0; i < TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count; i++)
-                {
-                    ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
-                    TablesCollections.AddByIndex(stableindex, ftableData);
-                }
-            }
-            SelectedTable = null;
-            UpdateListBoxItemsSource();
-        }
-
         private void CreateTableCollectionsForMove()
         {
             if (TablesCollections.GetTableByName("П_ПИиИС", 0) == false)
@@ -959,83 +987,89 @@ namespace ProfPlan.ViewModels
 
         private void GenerateTeacher(object parameter)
         {
-            if(SelectedComboBoxIndex != -1 && TablesCollections.GetTableIndexForGenerate("ПИиИС", SelectedComboBoxIndex) != -1)
+            GenerateTeacherAsync();
+        }
+        private async Task GenerateTeacherAsync()
+        {
+            await Task.Run(() =>
             {
-                string prefix;
-                if(SelectedComboBoxIndex == 0)
+                if (SelectedComboBoxIndex != -1 && TablesCollections.GetTableIndexForGenerate("ПИиИС", SelectedComboBoxIndex) != -1)
                 {
-                    prefix = "П_";
-                }
-                else
-                {
-                    prefix = "Ф_";
-                }
-                int mainList = TablesCollections.GetTableIndexByName(prefix + "ПИиИС", SelectedComboBoxIndex);
-                var uniqueTeachers = TablesCollections.GetTablesCollection()[mainList].ExcelData
-               .Where(data => data is ExcelModel) // Фильтрация по типу ExcelModel
-               .Select(data => ((ExcelModel)data).Teacher) // Приведение к ExcelModel и выбор Teacher
-               .Distinct()
-               .ToList();
-                ObservableCollection<ExcelData> totallist = new ObservableCollection<ExcelData>();
-                foreach (var teacher in uniqueTeachers)
-                {
-                    var teacherTableCollection = new TableCollection() { };
-
-                    if (teacher.ToString() != "")
-                        teacherTableCollection = new TableCollection(prefix+teacher.ToString().Split(' ')[0]);
-                    else
-                        teacherTableCollection = new TableCollection(prefix+"Незаполненные");
-                    var teacherRows = TablesCollections.GetTablesCollection()[mainList].ExcelData
-                    .Where(data => data is ExcelModel && ((ExcelModel)data).Teacher == teacher)
-                    .ToList();
-                    foreach (ExcelModel techrow in teacherRows)
+                    string prefix;
+                    if (SelectedComboBoxIndex == 0)
                     {
-                        techrow.PropertyChanged += teacherTableCollection.ExcelModel_PropertyChanged;
-                        teacherTableCollection.ExcelData.Add(techrow);
-
+                        prefix = "П_";
                     }
-                    teacherTableCollection.SubscribeToExcelDataChanges();
-                    TablesCollections.Add(teacherTableCollection);
-                    //Реализация листа Итого:
-
-                    double? bet = null;
-                    string lname, fname, mname;
-                    if (teacherTableCollection.Tablename != prefix + "Незаполненные")
+                    else
                     {
-                        foreach(Teacher teach in TeachersManager.GetTeachers())
+                        prefix = "Ф_";
+                    }
+                    int mainList = TablesCollections.GetTableIndexByName(prefix + "ПИиИС", SelectedComboBoxIndex);
+                    var uniqueTeachers = TablesCollections.GetTablesCollection()[mainList].ExcelData
+                   .Where(data => data is ExcelModel) // Фильтрация по типу ExcelModel
+                   .Select(data => ((ExcelModel)data).Teacher) // Приведение к ExcelModel и выбор Teacher
+                   .Distinct()
+                   .ToList();
+                    ObservableCollection<ExcelData> totallist = new ObservableCollection<ExcelData>();
+                    foreach (var teacher in uniqueTeachers)
+                    {
+                        var teacherTableCollection = new TableCollection() { };
+
+                        if (teacher.ToString() != "")
+                            teacherTableCollection = new TableCollection(prefix+teacher.ToString().Split(' ')[0]);
+                        else
+                            teacherTableCollection = new TableCollection(prefix+"Незаполненные");
+                        var teacherRows = TablesCollections.GetTablesCollection()[mainList].ExcelData
+                        .Where(data => data is ExcelModel && ((ExcelModel)data).Teacher == teacher)
+                        .ToList();
+                        foreach (ExcelModel techrow in teacherRows)
                         {
-                            lname=teach.LastName;
-                            fname=teach.FirstName;
-                            mname=teach.MiddleName;
-                            if($"{lname} {fname[0]}.{mname[0]}." == teacher)
-                            {
-                                bet = teach.Workload;
-                            }
+                            techrow.PropertyChanged += teacherTableCollection.ExcelModel_PropertyChanged;
+                            teacherTableCollection.ExcelData.Add(techrow);
 
                         }
-                        totallist.Add(new ExcelTotal(
-                        teacher.IndexOf(' ') != -1 ? teacher.Substring(0, teacher.IndexOf(' ')) : teacher,
-                            bet,
-                        null,
-                            teacherTableCollection.TotalHours,
-                           teacherTableCollection.AutumnHours,
-                           teacherTableCollection.SpringHours,
-                            null)
-                            );
+                        teacherTableCollection.SubscribeToExcelDataChanges();
+                        TablesCollections.Add(teacherTableCollection);
+                        //Реализация листа Итого:
 
+                        double? bet = null;
+                        string lname, fname, mname;
+                        if (teacherTableCollection.Tablename != prefix + "Незаполненные")
+                        {
+                            foreach (Teacher teach in TeachersManager.GetTeachers())
+                            {
+                                lname=teach.LastName;
+                                fname=teach.FirstName;
+                                mname=teach.MiddleName;
+                                if ($"{lname} {fname[0]}.{mname[0]}." == teacher)
+                                {
+                                    bet = teach.Workload;
+                                }
+
+                            }
+                            totallist.Add(new ExcelTotal(
+                            teacher.IndexOf(' ') != -1 ? teacher.Substring(0, teacher.IndexOf(' ')) : teacher,
+                                bet,
+                            null,
+                                teacherTableCollection.TotalHours,
+                               teacherTableCollection.AutumnHours,
+                               teacherTableCollection.SpringHours,
+                                null)
+                                );
+
+                        }
                     }
+                    string tabname = prefix + "Итого";
+                    foreach (ExcelTotal list in totallist)
+                    {
+                        list.DifferenceCalc();
+                    }
+                    TablesCollections.Add(new TableCollection(tabname, totallist));
+                    TablesCollections.SortTablesCollection();
+                    UpdateListBoxItemsSource();
                 }
-                string tabname = prefix + "Итого";
-                foreach(ExcelTotal list in totallist)
-                {
-                    list.DifferenceCalc();
-                }
-                TablesCollections.Add(new TableCollection(tabname, totallist));
-                TablesCollections.SortTablesCollection();
-                UpdateListBoxItemsSource();
-            }
+            });
         }
-
         #endregion
 
 

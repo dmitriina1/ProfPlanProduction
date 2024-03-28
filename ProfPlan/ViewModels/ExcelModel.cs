@@ -163,7 +163,29 @@ namespace ProfPlan.ViewModels
 
             var nonZeroProperty = properties.FirstOrDefault(p => p.Value != null);
 
-            return nonZeroProperty != default ? nonZeroProperty.Name : null;
+            if (nonZeroProperty != default)
+            {
+                if (nonZeroProperty.Name == "Практическая работа/Рецензирование диплома")
+                {
+                    // Проверяем, содержит ли строка Discipline подстроку "преддипломная практика"
+                    if (Discipline != null && Discipline.Contains("преддипломная практика"))
+                    {
+                        return "Рецензирование диплома";
+                    }
+                    else
+                    {
+                        return "Практическая работа";
+                    }
+                }
+                else
+                {
+                    return nonZeroProperty.Name;
+                }
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public IndividualPlan FormulateIndividualPlan()

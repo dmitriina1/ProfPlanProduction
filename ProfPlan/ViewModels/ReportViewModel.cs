@@ -511,8 +511,10 @@ namespace ProfPlan.ViewModels
             //sworksheet.Range(frow, 1, frow, 3).Merge();
             fworksheet.Range(frow, 1, frow, 3).Merge();
             fworksheet.Cell(frow, 1).Value = "Первое полугодие";
+            fworksheet.Cell(frow, 1).Style.Font.SetBold(true);
             fworksheet.Range(frow, 22, frow, 27).Merge();
             fworksheet.Cell(frow, 22).Value = "Второе полугодие";
+            fworksheet.Cell(frow, 22).Style.Font.SetBold(true);
 
             fworksheet.Range(fworksheet.Cell(2, 8), fworksheet.Cell(2, 14)).Merge();
             fworksheet.Cell(2, 8).Value = "Руководство";
@@ -565,8 +567,9 @@ namespace ProfPlan.ViewModels
             fworksheet.Column(1).Style.Alignment.WrapText = true;
             fworksheet.Cell(2, 8).Style = workbook.Style.Alignment.SetTextRotation(0);
             fworksheet.Cell(2, 28).Style = workbook.Style.Alignment.SetTextRotation(0);
-            fworksheet.Columns().AdjustToContents();
+            fworksheet.Columns().AdjustToContents(3);
             fworksheet.Rows(2, 3).AdjustToContents();
+
         }
         private List<string> GetPropertyNamesForColumns()
         {
@@ -880,7 +883,7 @@ namespace ProfPlan.ViewModels
                         SumTables(worksheet, row, r, col1, col2, col3);
                         for (int z = 1; z < row+1; z++)
                         {
-                            for (int col = 1; col <= 7; col++)
+                            for (int col = 8; col <= 14; col++)
                             {
                                 var cell = worksheet.Cell(z, col);
                                 cell.Style.Border.TopBorder = XLBorderStyleValues.Thin;
@@ -899,7 +902,7 @@ namespace ProfPlan.ViewModels
                         SumTables(worksheet, row, r, col1, col2, col3);
                         for (int z = 1; z < row + 1; z++)
                         {
-                            for (int col = 1; col <= 7; col++)
+                            for (int col = 8; col <= 14; col++)
                             {
                                 var cell = worksheet.Cell(z, col);
                                 cell.Style.Border.TopBorder = XLBorderStyleValues.Thin;
