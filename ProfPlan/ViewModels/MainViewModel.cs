@@ -1068,7 +1068,7 @@ namespace ProfPlan.ViewModels
         //Бланк нагрузки
         #region CalcReport
         private RelayCommand _loadCalcReport;
-
+        private ReportViewModel loadCalcVM = new ReportViewModel();
         public ICommand LoadCalcReport
         {
             get { return _loadCalcReport ?? (_loadCalcReport = new RelayCommand(CreateLoadCalcReport)); }
@@ -1076,7 +1076,6 @@ namespace ProfPlan.ViewModels
 
         private void CreateLoadCalcReport(object obj)
         {
-            ReportViewModel loadCalcVM = new ReportViewModel();
             _=loadCalcVM.CreateLoadCalcAsync(SelectedComboBoxIndex);
         }
         #endregion
@@ -1092,7 +1091,6 @@ namespace ProfPlan.ViewModels
 
         private void CreateIndividualPlanReport(object obj)
         {
-            ReportViewModel loadCalcVM = new ReportViewModel();
             _=loadCalcVM.CreateIndividualPlan(SelectedComboBoxIndex);
         }
         #endregion

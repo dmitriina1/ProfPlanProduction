@@ -659,19 +659,26 @@ namespace ProfPlan.ViewModels
            .ToList();
             return IPList;
         }
-        public void WorkWithWorkSheet(IXLWorksheet worksheet, int row, List<IndividualPlan> IPList )
+        public void WorkWithWorkSheet(IXLWorksheet worksheet, List<IndividualPlan> IPList )
         {
-            
 
-            //
-            worksheet.Cell(row, 1).Value = "Четный семестр";
-            row++;
+            int row = 1;
+            int r = row;
+
             worksheet.Cell(row, 1).Value = "Дисциплина";
             worksheet.Cell(row, 2).Value = "Вид работы";
             worksheet.Cell(row, 3).Value = "Группа";
             worksheet.Cell(row, 4).Value = "Подгруппа";
             worksheet.Cell(row, 5).Value = "Филиал";
             worksheet.Cell(row, 6).Value = "Часы";
+            for(int j = 1; j<7; j++)
+            {
+                worksheet.Cell(row, j).Style.Font.SetBold(true);
+            }
+            row++;
+            worksheet.Range(row, 1, row, 5).Merge();
+            worksheet.Cell(row, 1).Value = "Четный семестр";
+           
             row++;
             foreach (IndividualPlan ip in IPList)
             {
@@ -686,17 +693,38 @@ namespace ProfPlan.ViewModels
                     row++;
                 }
             }
-            row+=2;
-
-            worksheet.Cell(row, 1).Value = "Нетный семестр";
-            row++;
+            var range = worksheet.Range(3, 6, row, 6);
+            double sum = range.CellsUsed().Sum(cell => cell.GetDouble());
+            worksheet.Cell(2, 6).Value = sum;
+            worksheet.Cell(2, 6).Style.Font.SetBold(true);
+            for (int z = r; z < row; z++)
+            {
+                for (int col = 1; col <= 6; col++)
+                {
+                    var cell = worksheet.Cell(z, col);
+                    cell.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                    cell.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                    cell.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                    cell.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                }
+            }
+            r=row;
+           
             worksheet.Cell(row, 1).Value = "Дисциплина";
             worksheet.Cell(row, 2).Value = "Вид работы";
             worksheet.Cell(row, 3).Value = "Группа";
             worksheet.Cell(row, 4).Value = "Подгруппа";
             worksheet.Cell(row, 5).Value = "Филиал";
             worksheet.Cell(row, 6).Value = "Часы";
+            for (int j = 1; j<7; j++)
+            {
+                worksheet.Cell(row, j).Style.Font.SetBold(true);
+            }
             row++;
+            worksheet.Range(row, 1, row, 5).Merge();
+            worksheet.Cell(row, 1).Value = "Нетный семестр";
+            row++;
+            int srow = row;
             foreach (IndividualPlan ip in IPList)
             {
                 if (ip.Term.IndexOf("нечет", StringComparison.OrdinalIgnoreCase) != -1)
@@ -710,7 +738,24 @@ namespace ProfPlan.ViewModels
                     row++;
                 }
             }
-            worksheet.Columns().AdjustToContents();
+            range = worksheet.Range(srow, 6, row, 6);
+            sum = range.CellsUsed().Sum(cell => cell.GetDouble());
+            worksheet.Cell(srow - 1, 6).Value = sum;
+            worksheet.Cell(srow - 1, 6).Style.Font.SetBold(true);
+            for (int z = r; z < row; z++)
+            {
+                for (int col = 1; col <= 6; col++)
+                {
+                    var cell = worksheet.Cell(z, col);
+                    cell.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                    cell.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                    cell.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                    cell.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                }
+            }
+            worksheet.Column(1).Style.Alignment.WrapText = true;
+            worksheet.Columns(1,7).AdjustToContents();
+            worksheet.Columns(8, 14).AdjustToContents(1);
             worksheet.Rows().AdjustToContents();
         }
         private ObservableCollection<List<IndividualPlan>> IPListP = new ObservableCollection<List<IndividualPlan>>(), IPListF = new ObservableCollection<List<IndividualPlan>>();
@@ -761,24 +806,29 @@ namespace ProfPlan.ViewModels
                     var worksheet = workbook.Worksheets.Add(tabName); 
 
                     //Итого
-                    worksheet.Range(row, 1, row + 1, 1).Merge();
-                    worksheet.Cell(row, 1).Value = "Виды учебных занятий (работ)";
-                   
-                    worksheet.Range(row, 2, row, 3).Merge();
-                    worksheet.Cell(row, 2).Value = "нечетный семестр";
-
-                    worksheet.Range(row, 4, row, 5).Merge();
-                    worksheet.Cell(row, 4).Value = "четный семестр";
-
-                    worksheet.Range(row, 6, row, 7).Merge();
-                    worksheet.Cell(row, 6).Value = "Итого за уч.год";
+                    worksheet.Range(row, 8, row + 1, 8).Merge();
+                    worksheet.Cell(row, 8).Value = "Виды учебных занятий (работ)";
+                    worksheet.Cell(row, 8).Style.Font.SetBold(true);
+                     worksheet.Range(row, 9, row, 10).Merge();
+                    worksheet.Cell(row, 9).Value = "нечетный семестр";
+                    worksheet.Cell(row, 9).Style.Font.SetBold(true);
+                    worksheet.Range(row, 11, row, 12).Merge();
+                    worksheet.Cell(row, 11).Value = "четный семестр";
+                    worksheet.Cell(row, 11).Style.Font.SetBold(true);
+                    worksheet.Range(row, 13, row, 14).Merge();
+                    worksheet.Cell(row, 13).Value = "Итого за уч.год";
+                    worksheet.Cell(row, 13).Style.Font.SetBold(true);
                     row++;
-                    worksheet.Cell(row, 2).Value = "План";
-                    worksheet.Cell(row, 4).Value = "План";
-                    worksheet.Cell(row, 6).Value = "План";
-                    worksheet.Cell(row, 7).Value = "Факт";
-                    worksheet.Cell(row, 3).Value = "Факт";
-                    worksheet.Cell(row, 5).Value = "Факт";
+                    worksheet.Cell(row, 9).Value = "План";
+                    worksheet.Cell(row, 11).Value = "План";
+                    worksheet.Cell(row, 13).Value = "План";
+                    worksheet.Cell(row, 14).Value = "Факт";
+                    worksheet.Cell(row, 10).Value = "Факт";
+                    worksheet.Cell(row, 12).Value = "Факт";
+                    for(int j = 8; j<15; j++)
+                    {
+                        worksheet.Cell(row, j).Style.Font.SetBold(true);
+                    }
 
                     row++;
                     int r = row;
@@ -786,48 +836,81 @@ namespace ProfPlan.ViewModels
                     int col1, col2, col3;
                     if (index == 0)
                     {
-                        col1 = 2;
-                        col2 = 4;
-                        col3 = 6;
+                        col1 = 9;
+                        col2 = 11;
+                        col3 = 13;
                     }
                     else
                     {
-                        col1 = 3;
-                        col2 = 5;
-                        col3 = 7;
+                        col1 = 10;
+                        col2 = 12;
+                        col3 = 14;
                     }
                     //var groupedByTypeOfWork = IPList.GroupBy(ip => new { ip.TypeOfWork, ip.Term });
                     //List<(string TypeOfWork, string Term, double? TotalHours)> resultList = new List<(string, string, double?)>();
                     if (IPListF.Count>0 && IPListP.Count>0)
                     {
-                        col1 = 2;
-                        col2 = 4;
-                        col3 = 6;
+                        col1 = 9;
+                        col2 = 11;
+                        col3 = 13;
                         CreateTotal(IPListP[i], index, r, ref row, worksheet, col1, col2, col3);
-                        col1 = 3;
-                        col2 = 5;
-                        col3 = 7;
+                        col1 = 10;
+                        col2 = 12;
+                        col3 = 14;
                         CreateTotal(IPListF[i], index, r, ref row, worksheet, col1, col2, col3);
                         SumAllTables(worksheet, row, r);
-                        row+=2;
+                        for (int z = 1; z < row+1; z++)
+                        {
+                            for (int col = 8; col <= 14; col++)
+                            {
+                                var cell = worksheet.Cell(z, col);
+                                cell.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                                cell.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                                cell.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                                cell.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            }
+                        }
+                        row+=4;
 
-                        WorkWithWorkSheet(worksheet, row, IPListF[i]);
+                        WorkWithWorkSheet(worksheet, IPListF[i]);
                     }
                     else if (IPListF.Count>0)
                     {
                         CreateTotal(IPListF[i], index, r, ref row, worksheet, col1, col2, col3);
                         SumTables(worksheet, row, r, col1, col2, col3);
-                        row+=2;
+                        for (int z = 1; z < row+1; z++)
+                        {
+                            for (int col = 1; col <= 7; col++)
+                            {
+                                var cell = worksheet.Cell(z, col);
+                                cell.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                                cell.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                                cell.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                                cell.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            }
+                        }
+                        row+=4;
 
-                        WorkWithWorkSheet(worksheet, row, IPListF[i]);
+                        WorkWithWorkSheet(worksheet, IPListF[i]);
                     }
                     else
                     {
                         CreateTotal(IPListP[i], index, r, ref row, worksheet, col1, col2, col3);
                         SumTables(worksheet, row, r, col1, col2, col3);
-                        row+=2;
+                        for (int z = 1; z < row + 1; z++)
+                        {
+                            for (int col = 1; col <= 7; col++)
+                            {
+                                var cell = worksheet.Cell(z, col);
+                                cell.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                                cell.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                                cell.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                                cell.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            }
+                        }
+                        row+=4;
 
-                        WorkWithWorkSheet(worksheet, row, IPListP[i]);
+                        WorkWithWorkSheet(worksheet, IPListP[i]);
                     }
                     
 
@@ -855,10 +938,10 @@ namespace ProfPlan.ViewModels
             
             foreach (var group in oddTermGrouped)
             {
-                var existingRow = worksheet.RowsUsed().FirstOrDefault(s => s.Cell(1).Value.ToString() == group.TypeOfWork);
+                var existingRow = worksheet.RowsUsed().FirstOrDefault(s => s.Cell(8).Value.ToString() == group.TypeOfWork);
                 if (existingRow == null)
                 {
-                    worksheet.Cell(row, 1).Value = group.TypeOfWork;
+                    worksheet.Cell(row, 8).Value = group.TypeOfWork;
                     worksheet.Cell(row, col1).Value = group.TotalHours;
                     row++;
                 }
@@ -869,10 +952,10 @@ namespace ProfPlan.ViewModels
             }
             foreach (var group in evenTermGrouped)
             {
-                var existingRow = worksheet.RowsUsed().FirstOrDefault(s => s.Cell(1).Value.ToString() == group.TypeOfWork);
+                var existingRow = worksheet.RowsUsed().FirstOrDefault(s => s.Cell(8).Value.ToString() == group.TypeOfWork);
                 if (existingRow == null)
                 {
-                    worksheet.Cell(row, 1).Value = group.TypeOfWork;
+                    worksheet.Cell(row, 8).Value = group.TypeOfWork;
                     worksheet.Cell(row, col2).Value = group.TotalHours;
                     row++;
                 }
@@ -893,7 +976,7 @@ namespace ProfPlan.ViewModels
                 sum = Convert.ToDouble(range1) + Convert.ToDouble(range2);
                 worksheet.Cell(i, col3).Value = sum;
             }
-            worksheet.Cell(row, 1).Value = "Итого";
+            worksheet.Cell(row, 8).Value = "Итого";
             //MessageBox.Show(worksheet.Cell(3, col1).Value.ToString());
             //MessageBox.Show(worksheet.Cell(row, col1).Value.ToString());
             var range = worksheet.Range(3, col1, row, col1);
@@ -905,12 +988,17 @@ namespace ProfPlan.ViewModels
             range = worksheet.Range(3, col3, row, col3);
             sum = range.CellsUsed().Sum(cell => cell.GetDouble());
             worksheet.Cell(row, col3).Value = sum;
+            for (int j = 8; j<15; j++)
+            {
+                worksheet.Cell(row, j).Style.Font.SetBold(true);
+            }
+
         }
 
         private void SumAllTables(IXLWorksheet worksheet, int row, int r)
         {
-            SumTables(worksheet, row, r, 2, 4, 6);
-            SumTables(worksheet, row, r, 3, 5, 7);
+            SumTables(worksheet, row, r, 9, 11, 13);
+            SumTables(worksheet, row, r, 10, 12, 14);
         }
 
         private string GetSaveFilePathForIP()
