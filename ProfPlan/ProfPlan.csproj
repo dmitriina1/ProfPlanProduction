@@ -184,6 +184,7 @@
       <DependentUpon>AddTeacherWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\MyContentTemplateSelector.cs" />
+    <Compile Include="Views\StateToVisibilityConverter.cs" />
     <Compile Include="Views\TabStripPlacementConverter.cs" />
     <Compile Include="Views\TeachersWindow.xaml.cs">
       <DependentUpon>TeachersWindow.xaml</DependentUpon>

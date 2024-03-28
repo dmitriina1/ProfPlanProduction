@@ -13,9 +13,14 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
-        <Menu Grid.Row="0"  Margin="5,5" Background="White">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.25*"/>
+            <ColumnDefinition Width="*"/>
+            
+        </Grid.ColumnDefinitions>
+        <Menu Grid.Row="0"  Margin="5,5" Background="White" Grid.ColumnSpan="2">
 
             <MenuItem Header="Файл" HorizontalAlignment="Left" FontSize="16">
                 <MenuItem Header="Создать" FontSize="14" HorizontalAlignment="Left" Command="{Binding CreateCommand}"/>
@@ -52,7 +57,8 @@
         
         
 
-        <TabControl Style="{StaticResource MaterialDesignTabControl}" 
+        <TabControl Grid.ColumnSpan="2"
+            Style="{StaticResource MaterialDesignTabControl}" 
             TabStripPlacement="{Binding TabStripPlacement, Mode=TwoWay}"  
             Grid.Row="1" Name="MainTabControl" 
             ItemsSource="{Binding DisplayedTables}"
@@ -67,5 +73,16 @@
             </TabControl.ItemTemplate>
 
         </TabControl>
+        <StatusBar Grid.Row="2" Grid.Column="0">
+            <StatusBarItem HorizontalAlignment="Left">
+                <Grid Visibility="{Binding State, Converter={StaticResource StateToVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}">
+                    <!-- Прогресс-бар -->
+                    <ProgressBar x:Name="Status" Background="Gray" Width="200" Height="15" Value="{Binding State}" Minimum="0" Maximum="100" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                    <!-- Текстовый блок для отображения числового значения -->
+                    <TextBlock Foreground="White" Text="{Binding ElementName=Status, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Grid>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>

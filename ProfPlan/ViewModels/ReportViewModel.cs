@@ -6,12 +6,14 @@ using ProfPlan.ViewModels.Base;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -32,6 +34,26 @@ namespace ProfPlan.ViewModels
         //    wasCalc = true;
         //    SaveToExcel(TablesCollectionTeacherSum);
         //}
+
+        private double _state;
+        public double State
+        {
+            get { return _state; }
+            set
+            {
+                if (_state != value)
+                {
+                    _state = value;
+                    OnPropertyChanged(nameof(State));
+                    OnStateChanged();
+                }
+            }
+        }
+        protected virtual void OnStateChanged()
+        {
+            StateChanged?.Invoke(this, EventArgs.Empty);
+        }
+        public event EventHandler StateChanged;
         public async Task CreateLoadCalcAsync(int index)
         {
             string directoryPath = GetSaveFilePath();
@@ -65,8 +87,9 @@ namespace ProfPlan.ViewModels
 
                 TablesCollectionTeacherSumListF = new ObservableCollection<TableCollection>();
             }
-            
 
+            int completedTables = 0;
+            int totalTables = TablesCollections.GetTablesCollection().Count;
             foreach (var tableCollection in TablesCollections.GetTablesCollection())
             {
                 if (tableCollection.Tablename.IndexOf("ПИиИС", StringComparison.OrdinalIgnoreCase) == -1 && tableCollection.Tablename.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) == -1 && tableCollection.Tablename.IndexOf("Незаполненные", StringComparison.OrdinalIgnoreCase) == -1 && tableCollection.Tablename.IndexOf("Доп", StringComparison.OrdinalIgnoreCase) == -1)
@@ -169,10 +192,16 @@ namespace ProfPlan.ViewModels
                             }
                         }
                         
-                    }                    
+                    }
+                    completedTables++;
+                    double progress = (double)completedTables / totalTables * 100;
 
+                    State = (double)progress;
+                        
+                    Thread.Sleep(100);
 
                 }
+                State = 100;
 
             }
             
@@ -798,6 +827,8 @@ namespace ProfPlan.ViewModels
                     SomeTab = TablesCollectionTeacherSumListF;
                 else
                     SomeTab = TablesCollectionTeacherSumListP;
+                int completedTables = 0;
+                int totalTables = SomeTab.Count;
                 for (int i = 0;i< SomeTab.Count;i++)
                 {
                     int row = 1;
@@ -915,9 +946,12 @@ namespace ProfPlan.ViewModels
 
                         WorkWithWorkSheet(worksheet, IPListP[i]);
                     }
-                    
 
-                     
+                    completedTables++;
+                    double progress = (double)completedTables / totalTables * 100;
+
+                    State = (double)progress;
+                    Thread.Sleep(100);
                 }
             });
 

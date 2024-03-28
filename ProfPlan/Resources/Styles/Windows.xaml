@@ -4,6 +4,8 @@
                     xmlns:ap="clr-namespace:ProfPlan.AttachedProperties">
     
 
+    
+
     <DataTemplate x:Key="FirstTemplate" >
         <DataGrid ItemsSource="{Binding ExcelData}" Language="ru-RU" AutoGenerateColumns="False" VirtualizingPanel.IsVirtualizing="True" CanUserAddRows="False"  ap:MultiSelectorBehaviours.SynchronizedSelectedItems="{Binding DataContext.SelectedItems, RelativeSource={RelativeSource AncestorType={x:Type TabControl}}}">
             <DataGrid.CellStyle>
