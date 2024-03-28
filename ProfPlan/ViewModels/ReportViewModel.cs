@@ -75,19 +75,21 @@ namespace ProfPlan.ViewModels
 
         private void SumAllTeachersTables(int index)
         {
-            if(index == 0)
-            {
-                TablesCollectionTeacherSumP = new ObservableCollection<TableCollection>();
-
-                TablesCollectionTeacherSumListP = new ObservableCollection<TableCollection>();
-            }
-            else
+            
+            if(TablesCollections.GetTablesCollectionWithF().Count()>0)
             {
                 TablesCollectionTeacherSumF = new ObservableCollection<TableCollection>();
 
                 TablesCollectionTeacherSumListF = new ObservableCollection<TableCollection>();
+                index =1;
             }
+            else if (TablesCollections.GetTablesCollectionWithP().Count()>0)
+            {
+                TablesCollectionTeacherSumP = new ObservableCollection<TableCollection>();
 
+                TablesCollectionTeacherSumListP = new ObservableCollection<TableCollection>();
+                index =0;
+            }
             int completedTables = 0;
             int totalTables = TablesCollections.GetTablesCollection().Count;
             foreach (var tableCollection in TablesCollections.GetTablesCollection())

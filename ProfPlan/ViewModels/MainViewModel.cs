@@ -20,6 +20,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using ProfPlan.Views;
 using System.Collections.Specialized;
 using System.Threading;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 
 namespace ProfPlan.ViewModels
 {
@@ -723,6 +724,16 @@ namespace ProfPlan.ViewModels
                 {
                     var worksheet = CreateWorksheet(workbook, table);
                     PopulateWorksheet(worksheet, table);
+                        if (table.Tablename.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) == -1 && worksheet.Name.IndexOf("ПИиИС", StringComparison.OrdinalIgnoreCase) == -1 && worksheet.Name.IndexOf("Доп", StringComparison.OrdinalIgnoreCase) == -1)
+                        {
+                            worksheet.Cell(1, 2).Value = worksheet.Cell(3, 2).Value;
+                            worksheet.Cell(1, 2).Style.Font.SetFontSize(14);
+                            worksheet.Cell(1, 2).Style.Font.SetBold(true);
+
+                            worksheet.Cell(1, 5).Value = "Всего";
+                            worksheet.Cell(1, 5).Style.Font.SetFontSize(14);
+                            worksheet.Cell(1, 5).Style.Font.SetBold(true);
+                        }
                         completedTables++;
                         double progress = (double)completedTables / totalTables * 100;
 
@@ -761,13 +772,15 @@ namespace ProfPlan.ViewModels
                 {
                     if (worksheet.Name.IndexOf("Итого", StringComparison.OrdinalIgnoreCase) == -1)
                     {
+                        
+                        worksheet.Columns(2,3).AdjustToContents(4,4);
                         worksheet.Rows().AdjustToContents();
-                    }
+                        }
                 }
 
+                    
 
-
-                SaveWorkbook(workbook);
+                    SaveWorkbook(workbook);
             }
             });
         }
@@ -793,6 +806,10 @@ namespace ProfPlan.ViewModels
             int columnNumber = 1;
             foreach (var propertyInfo in typeof(ExcelTotal).GetProperties())
             {
+                worksheet.Cell(1, columnNumber).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                worksheet.Cell(1, columnNumber).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                worksheet.Cell(1, columnNumber).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                worksheet.Cell(1, columnNumber).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
                 worksheet.Cell(1, columnNumber).Value = propertyInfo.Name;
                 columnNumber++;
             }
@@ -803,6 +820,10 @@ namespace ProfPlan.ViewModels
             int columnNumber = 1;
             foreach (var propertyInfo in typeof(ExcelModel).GetProperties())
             {
+                worksheet.Cell(2, columnNumber).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                worksheet.Cell(2, columnNumber).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                worksheet.Cell(2, columnNumber).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                worksheet.Cell(2, columnNumber).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
                 if (propertyInfo.Name != "Teachers")
                 {
                     worksheet.Cell(2, columnNumber).Value = propertyInfo.Name;
@@ -820,6 +841,10 @@ namespace ProfPlan.ViewModels
             {
                 foreach (var propertyName in GetPropertyNames(data))
                 {
+                    worksheet.Cell(rowNumber, columnNumber).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                    worksheet.Cell(rowNumber, columnNumber).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                    worksheet.Cell(rowNumber, columnNumber).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                    worksheet.Cell(rowNumber, columnNumber).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
                     var value = data.GetType().GetProperty(propertyName)?.GetValue(data, null);
                     worksheet.Cell(rowNumber, columnNumber).Value = value != null ? value.ToString() : "";
                     columnNumber++;
@@ -956,100 +981,90 @@ namespace ProfPlan.ViewModels
 
         private void MoveTeachers(object parameter)
         {
-            MoveTeachers();
-        }
-        private async Task MoveTeachers()
-        {
             int completedTables = 0;
             int totalTables;
-            await Task.Run(() =>
+            int ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
+            int stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
+            if (ftableindex != -1 && stableindex != -1)
             {
-                int ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
-                int stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
-                if (ftableindex != -1 && stableindex != -1)
+                try
                 {
-                    try
+                    if (TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count != 0)
                     {
-                        if (TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count != 0)
+                        totalTables = TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count;
+                        for (int i = 0; i < TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count; i++)
                         {
-                            totalTables = TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count;
-                            for (int i = 0; i < TablesCollections.GetTablesCollection()[stableindex].ExcelData.Count; i++)
+                            if (TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] is ExcelModel excelModel && excelModel.Teacher == "")
                             {
-                                if (TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] is ExcelModel excelModel && excelModel.Teacher == "")
-                                {
-                                    ExcelModel stableData = TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] as ExcelModel;
-                                    ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
-
-                                    if (stableData != null && ftableData != null &&
-                                        stableData.Term == ftableData.Term &&
-                                        stableData.Group == ftableData.Group &&
-                                        stableData.Institute == ftableData.Institute &&
-                                        stableData.FormOfStudy == ftableData.FormOfStudy &&
-                                        ftableData.Teacher != "")
-                                    {
-                                        stableData.Teacher = ftableData.Teacher;
-                                    }
-                                    completedTables++;
-                                    double progress = (double)completedTables / totalTables * 100;
-
-                                    State = (double)progress;
-                                    Thread.Sleep(100);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            MessageBox.Show("Лист Факт пустой! Поэтому данные с листа План были скопированы");
-                            CreateTableCollectionsForMove();
-                            ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
-                            stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
-                            totalTables = TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count;
-                            for (int i = 0; i < TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count; i++)
-                            {
+                                ExcelModel stableData = TablesCollections.GetTablesCollection()[stableindex].ExcelData[i] as ExcelModel;
                                 ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
-                                TablesCollections.AddByIndex(stableindex, ftableData);
+
+                                if (stableData != null && ftableData != null &&
+                                    stableData.Term == ftableData.Term &&
+                                    stableData.Group == ftableData.Group &&
+                                    stableData.Institute == ftableData.Institute &&
+                                    stableData.FormOfStudy == ftableData.FormOfStudy &&
+                                    ftableData.Teacher != "")
+                                {
+                                    stableData.Teacher = ftableData.Teacher;
+                                }
                                 completedTables++;
                                 double progress = (double)completedTables / totalTables * 100;
 
                                 State = (double)progress;
-                                Thread.Sleep(100);
                             }
                         }
-
                     }
-                    catch
+                    else
                     {
+                        MessageBox.Show("Лист Факт пустой! Поэтому данные с листа План были скопированы");
+                        CreateTableCollectionsForMove();
+                        ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
+                        stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
+                        totalTables = TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count;
+                        for (int i = 0; i < TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count; i++)
+                        {
+                            ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
+                            TablesCollections.AddByIndex(stableindex, ftableData);
+                            completedTables++;
+                            double progress = (double)completedTables / totalTables * 100;
 
+                            State = (double)progress;
+                        }
                     }
+
                 }
-                else
+                catch
                 {
-                    MessageBox.Show("Лист Факт пустой! Поэтому данные с листа План были скопированы");
-                    CreateTableCollectionsForMove();
-                    ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
-                    stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
-                    totalTables = TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count;
-                    for (int i = 0; i < TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count; i++)
-                    {
-                        ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
-                        TablesCollections.AddByIndex(stableindex, ftableData);
-                        completedTables++;
-                        double progress = (double)completedTables / totalTables * 100;
 
-                        State = (double)progress;
-                        Thread.Sleep(100);
-                    }
                 }
-                if (SelectedComboBoxIndex==0 && TablesCollections.GetTablesCollectionWithP().Count()>0)
-                    SelectedTable = TablesCollections.GetTablesCollectionWithP()[0];
-                else if (SelectedComboBoxIndex==1 && TablesCollections.GetTablesCollectionWithF().Count()>0)
-                    SelectedTable = TablesCollections.GetTablesCollectionWithF()[0];
-                else
-                    SelectedTable = null;
-                UpdateListBoxItemsSource();
-                State = 100;
-            });
             }
+            else
+            {
+                MessageBox.Show("Лист Факт пустой! Поэтому данные с листа План были скопированы");
+                CreateTableCollectionsForMove();
+                ftableindex = TablesCollections.GetTableIndexByName("П_ПИиИС", SelectedComboBoxIndex);
+                stableindex = TablesCollections.GetTableIndexByName("Ф_ПИиИС", SelectedComboBoxIndex);
+                totalTables = TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count;
+                for (int i = 0; i < TablesCollections.GetTablesCollection()[ftableindex].ExcelData.Count; i++)
+                {
+                    ExcelModel ftableData = TablesCollections.GetTablesCollection()[ftableindex].ExcelData[i] as ExcelModel;
+                    TablesCollections.AddByIndex(stableindex, ftableData);
+                    completedTables++;
+                    double progress = (double)completedTables / totalTables * 100;
+
+                    State = (double)progress;
+                }
+            }
+            if (SelectedComboBoxIndex==0 && TablesCollections.GetTablesCollectionWithP().Count()>0)
+                SelectedTable = TablesCollections.GetTablesCollectionWithP()[0];
+            else if (SelectedComboBoxIndex==1 && TablesCollections.GetTablesCollectionWithF().Count()>0)
+                SelectedTable = TablesCollections.GetTablesCollectionWithF()[0];
+            else
+                SelectedTable = null;
+            UpdateListBoxItemsSource();
+            State = 100;
+        }
         private void CreateTableCollectionsForMove()
         {
             if (TablesCollections.GetTableByName("П_ПИиИС", 0) == false)
